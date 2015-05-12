@@ -1,0 +1,136 @@
+% This file was converted to LaTeX by Writer2LaTeX ver. 0.5
+% see http://www.hj-gym.dk/~hj/writer2latex for more info
+\documentclass[a4paper]{report}
+\usepackage[ascii]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsfonts,textcomp}
+\usepackage{color}
+\usepackage{array}
+\usepackage{supertabular}
+\usepackage{hhline}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, pagecolor=blue, urlcolor=blue, pdftitle="G-Meter Variometer", pdfauthor=pfb, pdfsubject=, pdfkeywords=}
+\usepackage[pdftex]{graphicx}
+% Text styles
+\newcommand\textstyleEmphasis[1]{\textit{#1}}
+% Outline numbering
+\setcounter{secnumdepth}{4}
+\renewcommand\thesection{\arabic{chapter}.\arabic{section}}
+\renewcommand\thesubsection{\arabic{chapter}.\arabic{section}.\arabic{subsection}}
+\renewcommand\thesubsubsection{\arabic{chapter}.\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+\renewcommand\theparagraph{\arabic{chapter}.\arabic{section}.\arabic{subsection}.\arabic{subsubsection}.\arabic{paragraph}}
+\makeatletter
+\newcommand\arraybslash{\let\\\@arraycr}
+\makeatother
+% Figure numbering
+\renewcommand{\thefigure}{\arabic{chapter}.\arabic{figure}}
+\newcommand{\Section}[1]{\section{#1} \setcounter{figure}{1}}
+% Footnote rule
+\setlength{\skip\footins}{1.2mm}
+\renewcommand\footnoterule{\vspace*{-0.18mm}\setlength\leftskip{0pt}\setlength\rightskip{0pt plus 1fil}\noindent\textcolor{black}{\rule{0.25\columnwidth}{0.18mm}}\vspace*{1.02mm}}
+% Pages styles
+\makeatletter
+\newcommand\ps@NewChapter{
+  \renewcommand\@oddhead{}
+  \renewcommand\@evenhead{}
+  \renewcommand\@oddfoot{}
+  \renewcommand\@evenfoot{}
+  \renewcommand\thepage{\arabic{page}}
+}
+\newcommand\ps@Standard{
+  \renewcommand\@oddhead{}
+  \renewcommand\@evenhead{}
+  \renewcommand\@oddfoot{}
+  \renewcommand\@evenfoot{}
+  \renewcommand\thepage{\arabic{page}}
+}
+\newcommand\ps@FirstPage{
+  \renewcommand\@oddhead{}
+  \renewcommand\@evenhead{}
+  \renewcommand\@oddfoot{}
+  \renewcommand\@evenfoot{}
+  \renewcommand\thepage{\arabic{page}}
+}
+\newcommand\ps@Contents{
+  \renewcommand\@oddhead{}
+  \renewcommand\@evenhead{}
+  \renewcommand\@oddfoot{}
+  \renewcommand\@evenfoot{}
+  \renewcommand\thepage{\roman{page}}
+}
+\makeatother
+\pagestyle{plain}
+\setlength\tabcolsep{1mm}
+\renewcommand\arraystretch{1.3}
+\newcounter{Text}[section]
+\numberwithin{equation}{chapter}
+\renewcommand\theText{\thesection.\arabic{Text}}
+\pagenumbering{arabic}
+\renewcommand{\thepage}{\arabic{chapter}.\arabic{page}}
+
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+
+\title{Soaring Operations Log Keeper}
+
+\begin{document}
+\maketitle
+\date{May 2015}
+
+\clearpage\setcounter{page}{1}
+\thispagestyle{Contents}
+
+\tableofcontents
+
+\clearpage\setcounter{page}{1}
+\thispagestyle{Contents}
+
+\listoffigures
+
+
+\clearpage\setcounter{page}{1}
+\chapter[Introduction]{Introduction}
+
+\section[Purpose]{Purpose}
+
+The purpose of this design document is to describe a soaring operations log keeping system. This system will be sufficiently robust to meet the regulatory requirements without need of any other agency.
+
+\section[Requirements]{Requirements}
+
+\subsection[Reliability]{Reliability}
+
+The system will be able to continue operating in the event of a single point failure.
+
+\subsection[Operator Access]{Operator Access}
+
+The system will allow an operator to enter the events: glider launch; tug landing; and, glider landing. For each of these events the operator will be able to enter the data: gilder registration; first glider pilot; second glider pilot; billing type; tug registration; and, tug pilot.
+
+\subsection[Automatic Flight Data]{Automatic Flight Data}
+
+The system will have the ability to interface to a suitable automatic flight data reporting system in near real time. \[FBNW\]
+
+\subsection[Operator Reporting]{Reporting}
+
+The system will have the ability to produce the reports: daily flight operations; pilot flight log; and, aircraft log;
+
+\subsection[Accounting Interface]{Accounting Interface}
+
+The system will have the ability to interface with an accounting package. \[FBNW\]
+
+\bigskip
+
+\clearpage\setcounter{page}{1}
+\chapter[Implementation]{Implementation}
+
+\section[Design]{Design}
+
+\subsection[Top Level]{Top Level}
+
+The system will consist of two segments: the flight line segment; and, the back end or office segment.
+
+The software used on both segments will be MySQL with Cluster extension. Therefore the application software will consist mainly of SQL.
+
+The flight line segment will run on three nodes in order to provide triple redundancy. The back end segment will consist of, at the minimum, two local nodes or one local nodes and a minimum of one remote node.
+
+
+\end{document}
