@@ -6,6 +6,20 @@ T 55700 48200 5 10 0 0 270 0 1
 device=CONNECTOR_6
 T 55900 49900 5 10 1 1 270 0 1
 refdes=P4
+T 54400 50400 5 10 1 1 0 0 1
+pinlabel=Analog in
+T 55500 50200 5 10 1 1 270 0 1
+pinlabel=0
+T 55200 50200 5 10 1 1 270 0 1
+pinlabel=1
+T 54900 50200 5 10 1 1 270 0 1
+pinlabel=2
+T 54600 50200 5 10 1 1 270 0 1
+pinlabel=3
+T 54300 50200 5 10 1 1 270 0 1
+pinlabel=4
+T 54000 50200 5 10 1 1 270 0 1
+pinlabel=5
 }
 C 50800 50000 1 270 0 connector8-1.sym
 {
@@ -13,6 +27,20 @@ T 54000 49900 5 10 0 0 270 0 1
 device=CONNECTOR_8
 T 53400 49900 5 10 1 1 270 0 1
 refdes=P3
+T 51800 50500 5 10 1 1 0 0 1
+pinlabel=Power
+T 51600 50400 5 10 1 1 270 0 1
+pinlabel=Vin
+T 52100 50500 5 10 1 1 270 0 1
+pinlabel=GND
+T 51800 50500 5 10 1 1 270 0 1
+pinlabel=GND
+T 52400 50400 5 10 1 1 270 0 1
+pinlabel=5V
+T 52700 50400 5 10 1 1 270 0 1
+pinlabel=3V3
+T 53000 50600 5 10 1 1 270 0 1
+pinlabel=Reset*
 }
 C 47500 50000 1 270 0 connector8-1.sym
 {
@@ -20,6 +48,22 @@ T 50700 49900 5 10 0 0 270 0 1
 device=CONNECTOR_8
 T 50100 49900 5 10 1 1 270 0 1
 refdes=P2
+T 49700 50200 5 10 1 1 270 0 1
+pinlabel=0
+T 49500 50200 5 10 1 1 270 0 1
+pinlabel=1
+T 49200 50200 5 10 1 1 270 0 1
+pinlabel=2
+T 48900 50200 5 10 1 1 270 0 1
+pinlabel=3
+T 48600 50200 5 10 1 1 270 0 1
+pinlabel=4
+T 48200 50200 5 10 1 1 270 0 1
+pinlabel=5
+T 47900 50200 5 10 1 1 270 0 1
+pinlabel=6
+T 47600 50200 5 10 1 1 270 0 1
+pinlabel=7
 }
 C 43400 50000 1 270 0 connector10-1.sym
 {
@@ -27,6 +71,22 @@ T 46400 48100 5 10 0 0 270 0 1
 device=CONNECTOR_10
 T 46600 49900 5 10 1 1 270 0 1
 refdes=P1
+T 46200 50200 5 10 1 1 270 0 1
+pinlabel=8
+T 45900 50200 5 10 1 1 270 0 1
+pinlabel=9
+T 45600 50300 5 10 1 1 270 0 1
+pinlabel=10
+T 45300 50300 5 10 1 1 270 0 1
+pinlabel=11
+T 45000 50300 5 10 1 1 270 0 1
+pinlabel=12
+T 44700 50300 5 10 1 1 270 0 1
+pinlabel=13
+T 44100 50600 5 10 1 1 270 0 1
+pinlabel=GND
+T 44400 50600 5 10 1 1 270 0 1
+pinlabel=AREF
 }
 C 52800 46100 1 90 0 resistor-1.sym
 {
