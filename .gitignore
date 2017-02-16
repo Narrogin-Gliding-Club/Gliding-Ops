@@ -5,3 +5,14 @@
 *.out
 *.pdf
 *.toc
+
+# Generated files
+out/*
+Makefile
+*.cmake
+CMakeFiles/
+
+# Misc and temporary files
+*.swp
+*.save
+*.tmp
