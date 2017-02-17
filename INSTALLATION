@@ -1,0 +1,12 @@
+To install from a clean pull using 'make' (GNU make):
+
+mkdir out
+cd out
+cmake -G "Unix Makefiles" ..
+make
+
+To install from a clean pull using 'ninja' (Ninja):
+mkdir out
+cd out
+cmake -G "Ninja" ..
+ninja
