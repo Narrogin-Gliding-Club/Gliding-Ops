@@ -1,0 +1,3 @@
+[submodule "LogKeeper/src/lib/i2cdevlib"]
+	path = LogKeeper/src/lib/i2cdevlib
+	url = https://github.com/jrowberg/i2cdevlib.git
