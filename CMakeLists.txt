@@ -7,5 +7,9 @@ set(cxx-flags "-fno-exceptions -fno-rtti -std=gnu++0x -fno-threadsafe-statics -f
 set(CMAKE_CXX_FLAGS ${cxx-warnings} ${cxx-flags}
         CACHE STRING "Flags used by the compiler during all build types." FORCE)
 
+# Common constants.
+set(ARDUINO_LIBRARY_SRCDIR "/usr/share/arduino/libraries")
+set(ARDUINO_LIBRARY_CORES  "/usr/share/arduino/hardware/arduino/cores/arduino")
+set(AVRSIZE_PROGRAM "/usr/bin/avr-size")
 add_subdirectory(build)
 

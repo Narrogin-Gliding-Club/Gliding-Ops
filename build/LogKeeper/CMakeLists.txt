@@ -1,1 +1,2 @@
-# Place holder.
+
+add_subdirectory(src)
