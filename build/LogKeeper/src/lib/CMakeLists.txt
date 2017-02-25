@@ -1,2 +1,2 @@
 
-add_subdirectory(i2cdev)
+add_subdirectory(Arduino)
