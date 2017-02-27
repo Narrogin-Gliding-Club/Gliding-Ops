@@ -9,7 +9,6 @@
 # Generated files
 out/*
 Makefile
-*.cmake
 CMakeFiles/
 
 # Misc and temporary files
