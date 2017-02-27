@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.5)
 
-include("../Arduino.cmake")
+include("../../Arduino.cmake")
 #set(ARDUINO_LIBRARY_SRCDIR "/usr/share/arduino/libraries")
 #set(ARDUINO_LIBRARY_CORES  "/usr/share/arduino/hardware/arduino/cores/arduino")
 add_library(Arduino STATIC
