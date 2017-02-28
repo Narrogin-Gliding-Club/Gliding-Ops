@@ -1,3 +1,6 @@
 [submodule "LogKeeper/src/lib/i2cdevlib"]
 	path = LogKeeper/src/lib/i2cdevlib
 	url = https://github.com/jrowberg/i2cdevlib.git
+[submodule "LogKeeper/src/lib/MsTimer2"]
+	path = LogKeeper/src/lib/MsTimer2
+	url = https://github.com/PaulStoffregen/MsTimer2.git
