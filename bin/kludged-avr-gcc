@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# A quick and dirty to handle CMakes apparent need to invoke avr-g++ with 
+# the -rdynamic flag on linking - which avr-g++ does not understand. Get rid
+# of this script ASAP.
+
+#args=$(echo $* | sed -e 's/-rdynamic//g')
+args=$*
+#echo $args
+avr-gcc ${args}
