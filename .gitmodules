@@ -4,3 +4,6 @@
 [submodule "LogKeeper/src/lib/MsTimer2"]
 	path = LogKeeper/src/lib/MsTimer2
 	url = https://github.com/PaulStoffregen/MsTimer2.git
+[submodule "LogKeeper/src/lib/Low-Power"]
+	path = LogKeeper/src/lib/Low-Power
+	url = https://github.com/rocketscream/Low-Power.git
