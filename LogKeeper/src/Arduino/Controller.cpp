@@ -130,8 +130,6 @@ byte led_state = 0;
 void
 setup()
   {
-  Serial.begin(115200);         // For debug.
-  pinMode(LED_BUILTIN, OUTPUT); // Pin 13 as a LED display (yellow).
   pinMode(K1, OUTPUT);          // Relay
   pinMode(K2, OUTPUT);
   pinMode(K3, OUTPUT);
@@ -140,21 +138,26 @@ setup()
   digitalWrite(K2, HIGH);       // Turn everything else off!
   digitalWrite(K3, HIGH);
   digitalWrite(K4, HIGH);
+  Serial.begin(115200);         // For debug.
+  pinMode(LED_BUILTIN, OUTPUT); // Pin 13 as a LED display (yellow).
   pinMode(SHUTDOWNPIN, INPUT_PULLUP);
   Wire.begin();                 // join i2c bus (address optional for master)
   Wire.onReceive(i2creceive);   // register receive event
   tick = 0;
+  delay(10000);                 // Allow a serial connection.
   }
 
 //------------------------------------------------------------------------------
 void
 loop()
   {
-  if (tick % 2)
+  if (tick % 2 == 0)
     { // Every 30 mSec
     if ((digitalRead(SHUTDOWNPIN) == LOW) &&
         (processor_state[2] != ProcessorState::SHUTINGDOWN))
       { // Do not bother to debounce
+      if (Serial)
+        Serial.println(SHUTDOWNPIN);
       processor_state[2] = ProcessorState::SHUTINGDOWN; // This process is
                                                         // shuting down.
       command(I2C_FLARM_ADDR, Command::DOWN);
@@ -162,11 +165,11 @@ loop()
       }
     }
 
-  if (tick % 4)
+  if (tick % 4 == 0)
     { // Every 60 mSec
     }
 
-  if (tick % 8)
+  if (tick % 8 == 0)
     { // Every 120 mSec
     }
 
@@ -184,17 +187,22 @@ loop()
       }
     }
 
-  if (tick % 64)
+  if (tick % 64 == 0)
     { // Every 960 mSec
+
     if (adsl_to > 100)
       {
       processor_state[0] = ProcessorState::DOWN;
       adsl_to = 0;
+      if (Serial)
+        Serial.println("0: DOWN");
       }
     if (flarm_to > 100)
       {
       processor_state[1] = ProcessorState::DOWN;
       flarm_to = 0;
+      if (Serial)
+        Serial.println("1: DOWN");
       }
 
     if (processor_state[0] == ProcessorState::UP      ||
@@ -225,13 +233,20 @@ loop()
       }
     }
   
-  if (tick % 1024)
+  if (tick % 1024 == 0)
     { // Every 15.360 Sec
 
     // Read the battery and panel.
     bat_v = analogRead(5);
     pan_v = analogRead(4);
 
+    if (Serial)
+      {
+      Serial.print("B: ");
+      Serial.println(bat_v, DEC);
+      Serial.print("P: ");
+      Serial.println(pan_v, DEC);
+      }
     switch (processor_state[0])
       {
       case ProcessorState::DOWN:
@@ -239,6 +254,8 @@ loop()
           {
           digitalWrite(K2, LOW);  // Powerup adsl.
           processor_state[0] = ProcessorState::BOOTING;
+          if (Serial)
+            Serial.println("0: BOOTING");
           }
         break;
       case ProcessorState::BOOTING:
@@ -246,6 +263,8 @@ loop()
           {
           digitalWrite(K2, HIGH); // Not much else we can do here.
           processor_state[0] = ProcessorState::DOWN;
+          if (Serial)
+            Serial.println("0: DOWN");
           }
         break;
       case ProcessorState::UP:
@@ -255,9 +274,13 @@ loop()
           {
           command(I2C_ADSL_ADDR, Command::DOWN);
           processor_state[0] = ProcessorState::SHUTINGDOWN;
+          if (Serial)
+            Serial.println("0: SHUTINGDOWN");
           }
         if (bat_v < BAT_SETPOINT_1)
           {
+          if (Serial)
+            Serial.println("2: DEAD FLAT");
           digitalWrite(K3, HIGH); // This will certainly already be DOWN.
           digitalWrite(K2, HIGH); // Likewise, this.
           digitalWrite(K1, HIGH); // This kills everything including the
@@ -275,11 +298,19 @@ loop()
       {
       case PanelState::DAY:
         if (pan_v < PAN_SETPOINT_1)
+          {
           panel_state = PanelState::NIGHT;
+          if (Serial)
+            Serial.println("NIGHT");
+          }
         break;
       case PanelState::NIGHT:
         if (pan_v > PAN_SETPOINT_2)
+          {
           panel_state = PanelState::DAY;
+          if (Serial)
+            Serial.println("DAY");
+          }
         break;
       }
 
@@ -290,6 +321,8 @@ loop()
           {
           digitalWrite(K3, LOW);
           processor_state[1] = ProcessorState::BOOTING;
+          if (Serial)
+            Serial.println("1: BOOTING");
           }
         break;
       case ProcessorState::BOOTING:
@@ -297,6 +330,8 @@ loop()
           {
           digitalWrite(K3, HIGH); // Not much else we can do here.
           processor_state[1] = ProcessorState::DOWN;
+          if (Serial)
+            Serial.println("1: DOWN");
           }
         break;
       case ProcessorState::UP:
@@ -304,6 +339,8 @@ loop()
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
           processor_state[1] = ProcessorState::SHUTINGDOWN;
+          if (Serial)
+            Serial.println("1: SHUTINGDOWN");
           }
         else if (bat_v < BAT_SETPOINT_5)
           command(I2C_FLARM_ADDR, Command::KILL_APP);
@@ -311,6 +348,8 @@ loop()
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
           processor_state[1] = ProcessorState::SHUTINGDOWN;
+          if (Serial)
+            Serial.println("1: SHUTINGDOWN");
           }
         break;
       case ProcessorState::IDLE:
@@ -318,6 +357,8 @@ loop()
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
           processor_state[1] = ProcessorState::SHUTINGDOWN;
+          if (Serial)
+            Serial.println("1: SHUTINGDOWN");
           }
         else if (bat_v > BAT_SETPOINT_6)
           command(I2C_FLARM_ADDR, Command::LAUNCH_APP);
@@ -328,17 +369,22 @@ loop()
     }
   tick++;
 
-  // Go to a low power mode for a while.
-  LowPower.idle(SLEEP_15MS,
-                ADC_OFF,
-                TIMER4_OFF,
-                TIMER3_OFF,
-                TIMER1_OFF, 
-          		  TIMER0_OFF,
-                SPI_OFF,
-                USART1_OFF,
-                TWI_OFF,
-                USB_OFF);
+  if (!Serial)
+    {
+    // Go to a low power mode for a while.
+    LowPower.idle(SLEEP_15MS,
+                  ADC_OFF,
+                  TIMER4_OFF,
+                  TIMER3_OFF,
+                  TIMER1_OFF,
+                  TIMER0_OFF,
+                  SPI_OFF,
+                  USART1_OFF,
+                  TWI_OFF,
+                  USB_OFF);
+    }
+  else
+    delay(15);
   }
 
 //------------------------------------------------------------------------------
@@ -383,14 +429,27 @@ update_processor_status(byte p, volatile PollResponse r)
     {
     case PollResponse::SHUTINGDOWN:
       processor_state[p] = ProcessorState::SHUTINGDOWN;
+      if (Serial)
+        {
+        Serial.print(p, DEC);
+        Serial.println(": SHUTINGDOWN");
+        }
       break;
     case PollResponse::RUNNING:
       processor_state[p] = ProcessorState::UP;
+      if (Serial)
+        {
+        Serial.print(p, DEC);
+        Serial.println(": UP");
+        }
       break;
     case PollResponse::IDLE:
       processor_state[p] = ProcessorState::IDLE;
+      if (Serial)
+        {
+        Serial.print(p, DEC);
+        Serial.println(": IDLE");
+        }
       break;
     }
-
-
   }
