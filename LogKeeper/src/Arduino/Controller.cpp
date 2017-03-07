@@ -156,10 +156,10 @@ loop()
     if ((digitalRead(SHUTDOWNPIN) == LOW) &&
         (processor_state[2] != ProcessorState::SHUTINGDOWN))
       { // Do not bother to debounce
-      if (Serial)
-        Serial.println(SHUTDOWNPIN);
       processor_state[2] = ProcessorState::SHUTINGDOWN; // This process is
                                                         // shuting down.
+      if (Serial)
+        Serial.println("2: SHUTINGDOWN");
       command(I2C_FLARM_ADDR, Command::DOWN);
       command(I2C_ADSL_ADDR,  Command::DOWN);
       }
@@ -171,19 +171,35 @@ loop()
 
   if (tick % 8 == 0)
     { // Every 120 mSec
+    if (processor_state[2] == ProcessorState::SHUTINGDOWN)
+      {
+      if (led_state == 0)
+        {
+        digitalWrite(LED_BUILTIN, HIGH);
+        led_state = 1;
+        }
+      else
+        {
+        digitalWrite(LED_BUILTIN, LOW);
+        led_state = 0;
+        }
+      }
     }
 
   if ( tick % 32 == 0)
     { // Every 480 mSec
-    if (led_state == 0)
+    if (processor_state[2] != ProcessorState::SHUTINGDOWN)
       {
-      digitalWrite(LED_BUILTIN, HIGH);
-      led_state = 1;
-      }
-    else
-      {
-      digitalWrite(LED_BUILTIN, LOW);
-      led_state = 0;
+      if (led_state == 0)
+        {
+        digitalWrite(LED_BUILTIN, HIGH);
+        led_state = 1;
+        }
+      else
+        {
+        digitalWrite(LED_BUILTIN, LOW);
+        led_state = 0;
+        }
       }
     }
 
