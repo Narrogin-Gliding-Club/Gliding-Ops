@@ -125,6 +125,7 @@ volatile int pan_v    = 0;
 volatile PollResponse adsl_response;
 volatile PollResponse flarm_response;
 byte led_state = 0;
+I2Cdev i2c;
 
 //------------------------------------------------------------------------------
 void
@@ -143,6 +144,7 @@ setup()
   pinMode(SHUTDOWNPIN, INPUT_PULLUP);
   Wire.begin();                 // join i2c bus (address optional for master)
   Wire.onReceive(i2creceive);   // register receive event
+  I2Cdev::readTimeout = 20;     // 20 mS timeout.
   tick = 0;
   delay(10000);                 // Allow a serial connection.
   }
@@ -413,28 +415,14 @@ i2creceive(int n)
 bool
 poll(byte addr, volatile PollResponse *r)
   {
-  Wire.beginTransmission(addr);
-  Wire.write("p");
-  Wire.endTransmission();
-  Wire.requestFrom(addr, 1, false);
-  if (Wire.available() > 0)
-    {
-    *r = (PollResponse )Wire.read();
-    return true;
-    }
-  else
-    return false;
+  return i2c.readByte(addr, 0, (byte *)r, 20);
   }
 
 //------------------------------------------------------------------------------
 bool
 command(byte addr, Command c)
   {
-  Wire.beginTransmission(addr);
-  Wire.write("c");
-  Wire.write((byte )c);
-  Wire.endTransmission();
-  return true;
+  return i2c.writeByte(addr, 0, (byte )c);
   }
 
 //------------------------------------------------------------------------------
