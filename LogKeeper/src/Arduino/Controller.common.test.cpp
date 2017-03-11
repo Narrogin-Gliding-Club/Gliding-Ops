@@ -27,6 +27,8 @@ Copyright_License {
 
 #include <Wire.h>
 
+#include "ControllerStates.hpp"
+
 #define PIN00  0
 #define PIN01  1
 #define PIN02  2
@@ -40,33 +42,6 @@ Copyright_License {
 #define PINCLK 10
 #define PWM1   11
 #define PWM2   12
-
-enum class BatteryState
-  {
-  DEAD_FLAT,
-  FLAT,
-  DISCHARGED,
-  REDUCED,
-  PARTIAL,
-  NOMINAL,
-  FULL,
-  OVER,
-  };
-
-enum class PanelState
-  {
-  DAY,
-  NIGHT
-  };
-
-enum class ProcessorState
-  {
-  DOWN,
-  SHUTINGDOWN,
-  BOOTING,
-  IDLE,
-  UP
-  };
 
 ProcessorState ps = ProcessorState::DOWN;
 BatteryState   bs = BatteryState::DEAD_FLAT;

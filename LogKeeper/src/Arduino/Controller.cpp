@@ -31,6 +31,8 @@ Copyright_License {
 #include <avr/pgmspace.h>
 #include <Wire.h>
 
+#include "ControllerStates.hpp"
+
 #define LED_BUILTIN    13
 #define K1             12
 #define K2             11
@@ -50,53 +52,6 @@ Copyright_License {
 #define PAN_SETPOINT_1  62  // 1.5V
 #define PAN_SETPOINT_2 416  // 10.0V
 
-enum class PollResponse : byte
-  {
-  RUNNING,
-  IDLE,
-  SHUTINGDOWN,
-  };
-
-enum class PollCommand : byte
-  {
-  NONE,
-  SHUTDOWNFLARM,
-  ENABLEFLARM,    // Signal that FLARM may be turned on today.
-  SHUTDOWNADSL,
-  };
-
-enum class Command : byte
-  {
-  NONE,
-  DOWN,
-  KILL_APP,
-  LAUNCH_APP,
-  };
-
-enum class ProcessorState : byte
-  {
-  UP,
-  IDLE,
-  BOOTING,
-  SHUTINGDOWN,
-  DOWN,
-  };
-
-enum class BatteryState : byte
-  {
-  CHARGING,
-  CHARGED,
-  NORMAL,
-  REDUCED,
-  DISCHARGED,
-  DEAD_FLAT,
-  };
-
-enum class PanelState : byte
-  {
-  DAY,
-  NIGHT,
-  };
 
 ProcessorState processor_state[3] = {
                                     ProcessorState::DOWN,
@@ -109,10 +64,10 @@ ProcessorState processor_state[3] = {
  */
 void dispatch();
 void i2creceive(int n);
-bool poll(byte addr, volatile PollResponse *r);
+bool poll(byte addr, volatile Reg0Response *r);
 void extract_command(byte addr, byte *c);
 bool command(byte addr, Command c);
-void update_processor_status(byte p, volatile PollResponse b);
+void update_processor_status(byte p, volatile Reg0Response b);
 
 // Global common.
 BatteryState   battery_state = BatteryState::DISCHARGED;// Until we know better.
@@ -122,8 +77,8 @@ volatile int adsl_to  = 0;
 volatile int flarm_to = 0;
 volatile int bat_v    = BAT_SETPOINT_7;  // Until the first A/D conversion.
 volatile int pan_v    = 0;
-volatile PollResponse adsl_response;
-volatile PollResponse flarm_response;
+volatile Reg0Response adsl_response;
+volatile Reg0Response flarm_response;
 byte led_state = 0;
 I2Cdev i2c;
 
@@ -156,12 +111,12 @@ loop()
   if (tick % 2 == 0)
     { // Every 30 mSec
     if ((digitalRead(SHUTDOWNPIN) == LOW) &&
-        (processor_state[2] != ProcessorState::SHUTINGDOWN))
+        (processor_state[2] != ProcessorState::SHUTTINGDOWN))
       { // Do not bother to debounce
-      processor_state[2] = ProcessorState::SHUTINGDOWN; // This process is
+      processor_state[2] = ProcessorState::SHUTTINGDOWN; // This process is
                                                         // shuting down.
       if (Serial)
-        Serial.println("2: SHUTINGDOWN");
+        Serial.println("2: SHUTTINGDOWN");
       command(I2C_FLARM_ADDR, Command::DOWN);
       command(I2C_ADSL_ADDR,  Command::DOWN);
       }
@@ -173,7 +128,7 @@ loop()
 
   if (tick % 8 == 0)
     { // Every 120 mSec
-    if (processor_state[2] == ProcessorState::SHUTINGDOWN)
+    if (processor_state[2] == ProcessorState::SHUTTINGDOWN)
       {
       if (led_state == 0)
         {
@@ -190,7 +145,7 @@ loop()
 
   if ( tick % 32 == 0)
     { // Every 480 mSec
-    if (processor_state[2] != ProcessorState::SHUTINGDOWN)
+    if (processor_state[2] != ProcessorState::SHUTTINGDOWN)
       {
       if (led_state == 0)
         {
@@ -226,7 +181,7 @@ loop()
     if (processor_state[0] == ProcessorState::UP      ||
         processor_state[0] == ProcessorState::IDLE    ||
         processor_state[0] == ProcessorState::BOOTING ||
-        processor_state[0] == ProcessorState::SHUTINGDOWN)
+        processor_state[0] == ProcessorState::SHUTTINGDOWN)
       {
       if (poll(I2C_ADSL_ADDR, &adsl_response) == true)
         {
@@ -239,7 +194,7 @@ loop()
     if (processor_state[1] == ProcessorState::UP      ||
         processor_state[1] == ProcessorState::IDLE    ||
         processor_state[1] == ProcessorState::BOOTING ||
-        processor_state[1] == ProcessorState::SHUTINGDOWN)
+        processor_state[1] == ProcessorState::SHUTTINGDOWN)
       {
       if (poll(I2C_FLARM_ADDR, &flarm_response) == true)
         {
@@ -291,9 +246,9 @@ loop()
         if (bat_v < BAT_SETPOINT_2)
           {
           command(I2C_ADSL_ADDR, Command::DOWN);
-          processor_state[0] = ProcessorState::SHUTINGDOWN;
+          processor_state[0] = ProcessorState::SHUTTINGDOWN;
           if (Serial)
-            Serial.println("0: SHUTINGDOWN");
+            Serial.println("0: SHUTTINGDOWN");
           }
         if (bat_v < BAT_SETPOINT_1)
           {
@@ -356,27 +311,27 @@ loop()
         if (panel_state == PanelState::NIGHT)
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTINGDOWN;
+          processor_state[1] = ProcessorState::SHUTTINGDOWN;
           if (Serial)
-            Serial.println("1: SHUTINGDOWN");
+            Serial.println("1: SHUTTINGDOWN");
           }
         else if (bat_v < BAT_SETPOINT_5)
           command(I2C_FLARM_ADDR, Command::KILL_APP);
         else if (bat_v < BAT_SETPOINT_4);
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTINGDOWN;
+          processor_state[1] = ProcessorState::SHUTTINGDOWN;
           if (Serial)
-            Serial.println("1: SHUTINGDOWN");
+            Serial.println("1: SHUTTINGDOWN");
           }
         break;
       case ProcessorState::IDLE:
         if (panel_state == PanelState::NIGHT)
           {
           command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTINGDOWN;
+          processor_state[1] = ProcessorState::SHUTTINGDOWN;
           if (Serial)
-            Serial.println("1: SHUTINGDOWN");
+            Serial.println("1: SHUTTINGDOWN");
           }
         else if (bat_v > BAT_SETPOINT_6)
           command(I2C_FLARM_ADDR, Command::LAUNCH_APP);
@@ -413,7 +368,7 @@ i2creceive(int n)
 
 //------------------------------------------------------------------------------
 bool
-poll(byte addr, volatile PollResponse *r)
+poll(byte addr, volatile Reg0Response *r)
   {
   return i2c.readByte(addr, 0, (byte *)r, 20);
   }
@@ -427,19 +382,19 @@ command(byte addr, Command c)
 
 //------------------------------------------------------------------------------
 void
-update_processor_status(byte p, volatile PollResponse r)
+update_processor_status(byte p, volatile Reg0Response r)
   {
   switch (r)
     {
-    case PollResponse::SHUTINGDOWN:
-      processor_state[p] = ProcessorState::SHUTINGDOWN;
+    case Reg0Response::SHUTTINGDOWN:
+      processor_state[p] = ProcessorState::SHUTTINGDOWN;
       if (Serial)
         {
         Serial.print(p, DEC);
-        Serial.println(": SHUTINGDOWN");
+        Serial.println(": SHUTTINGDOWN");
         }
       break;
-    case PollResponse::RUNNING:
+    case Reg0Response::RUNNING:
       processor_state[p] = ProcessorState::UP;
       if (Serial)
         {
@@ -447,7 +402,7 @@ update_processor_status(byte p, volatile PollResponse r)
         Serial.println(": UP");
         }
       break;
-    case PollResponse::IDLE:
+    case Reg0Response::IDLE:
       processor_state[p] = ProcessorState::IDLE;
       if (Serial)
         {
