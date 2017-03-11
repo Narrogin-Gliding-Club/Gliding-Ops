@@ -21,6 +21,10 @@ add_custom_command(OUTPUT Controller.eep
 add_custom_target(hex
                   DEPENDS Controller.hex 
                           Controller.eep
+                          Controller.adsl.test.hex
+                          Controller.adsl.test.eep
+                          Controller.flarm.test.hex
+                          Controller.flarm.test.eep
                  )
 
 set(SERIAL "/dev/ttyACM0")
@@ -44,11 +48,11 @@ target_link_libraries(Controller.adsl.test.elf
                       core
                      )
 add_custom_command(OUTPUT Controller.adsl.test.hex
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.adsl.test.elf Controller.adsl.hex
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.adsl.test.elf Controller.adsl.test.hex
                   DEPENDS Controller.adsl.test.elf
                   )
 add_custom_command(OUTPUT Controller.adsl.test.eep
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.test.elf Controller.test.eep
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.adsl.test.elf Controller.adsl.test.eep
                    DEPENDS Controller.adsl.test.elf
                   )
 add_custom_target(upload_Controller.adsl.test stty -F ${SERIAL} ospeed 1200 ispeed 1200
@@ -69,11 +73,11 @@ target_link_libraries(Controller.flarm.test.elf
                       core
                      )
 add_custom_command(OUTPUT Controller.flarm.test.hex
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.flarm.test.elf Controller.flarm.hex
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.flarm.test.elf Controller.flarm.test.hex
                   DEPENDS Controller.flarm.test.elf
                   )
 add_custom_command(OUTPUT Controller.flarm.test.eep
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.test.elf Controller.test.eep
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.flarm.test.elf Controller.flarm.test.eep
                    DEPENDS Controller.flarm.test.elf
                   )
 add_custom_target(upload_Controller.flarm.test stty -F ${SERIAL} ospeed 1200 ispeed 1200
