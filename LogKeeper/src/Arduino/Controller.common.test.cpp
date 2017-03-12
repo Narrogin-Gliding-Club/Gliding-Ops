@@ -36,12 +36,10 @@ Copyright_License {
 #define PIN04  4
 #define PIN05  5
 #define PIN06  6
-#define PIN07  7
-#define PIN08  8
-#define PIN09  9
-#define PINCLK 10
+#define PINCLK 7
 #define PWM1   11
-#define PWM2   12
+#define PWM2   10
+#define LED    13
 
 ProcessorState ps = ProcessorState::DOWN;
 BatteryState   bs = BatteryState::DEAD_FLAT;
@@ -63,9 +61,6 @@ setup()
   pinMode(PIN04,  INPUT_PULLUP);
   pinMode(PIN05,  INPUT_PULLUP);
   pinMode(PIN06,  INPUT_PULLUP);
-  pinMode(PIN07,  INPUT_PULLUP);
-  pinMode(PIN08,  INPUT_PULLUP);
-  pinMode(PIN09,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
   setBattery();
   setPanel();
@@ -104,9 +99,11 @@ loop()
 void
 i2creceive(int n)
   {
+  digitalWrite(LED, HIGH);
   if (Wire.available())
     if (Wire.read() == 0);  // Should be register 0;
       Wire.write(byte(ps));    // Simulate processor status.
+  digitalWrite(LED, LOW);
   }
 
 //------------------------------------------------------------------------------
