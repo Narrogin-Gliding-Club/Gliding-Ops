@@ -7,6 +7,7 @@ target_link_libraries(Controller.elf
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/MsTimer2/libMsTimer2.a
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/i2cdevlib/Arduino/I2Cdev/libI2Cdev.a
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/Low-Power/libLowPower.a
+                      ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/WSWireLib/libWSWire.a
                       Arduino
                       core
                      )

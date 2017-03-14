@@ -23,9 +23,8 @@ Copyright_License {
 
 #include "Controller.common.test.hpp"
 #include "Arduino.h"
-#include "I2Cdev.h"
 
-#include <Wire.h>
+#include <WSWire.h>
 
 #include "ControllerStates.hpp"
 
@@ -49,6 +48,7 @@ void i2creceive(int n);
 void setBattery();
 void setPanel();
 extern void setI2C();
+TwoWire WSWire;
 
 //------------------------------------------------------------------------------
 void
@@ -65,7 +65,8 @@ setup()
   setBattery();
   setPanel();
   setI2C();
-  Wire.onReceive(i2creceive);
+  digitalWrite(LED, LOW);
+  WSWire.onReceive(i2creceive);
   }
 
 //------------------------------------------------------------------------------
@@ -100,9 +101,9 @@ void
 i2creceive(int n)
   {
   digitalWrite(LED, HIGH);
-  if (Wire.available())
-    if (Wire.read() == 0);  // Should be register 0;
-      Wire.write(byte(ps));    // Simulate processor status.
+  if (WSWire.available())
+    if (WSWire.read() == 0);  // Should be register 0;
+      WSWire.write(byte(ps));    // Simulate processor status.
   digitalWrite(LED, LOW);
   }
 

@@ -25,11 +25,10 @@ Copyright_License {
 
 #include "Arduino.h"
 #include "MsTimer2.h"
-#include "I2Cdev.h"
 #include "LowPower.h"
 
 #include <avr/pgmspace.h>
-#include <Wire.h>
+#include <WSWire.h>
 
 #include "ControllerStates.hpp"
 
@@ -70,7 +69,7 @@ bool command(byte addr, Command c);
 void update_processor_status(byte p, volatile Reg0Response b);
 
 // Global common.
-BatteryState   battery_state = BatteryState::DISCHARGED;// Until we know better.
+BatteryState   battery_state = BatteryState::FLAT;      // Until we know better.
 PanelState     panel_state   = PanelState::NIGHT;       // Until we know better.
 int tick = 0;
 volatile int adsl_to  = 0;
@@ -80,7 +79,10 @@ volatile int pan_v    = 0;
 volatile Reg0Response adsl_response;
 volatile Reg0Response flarm_response;
 byte led_state = 0;
-I2Cdev i2c;
+uint16_t bat_acc;
+uint16_t pan_acc;
+uint8_t  nreadings;
+TwoWire WSWire;
 
 //------------------------------------------------------------------------------
 void
@@ -97,10 +99,10 @@ setup()
   Serial.begin(115200);         // For debug.
   pinMode(LED_BUILTIN, OUTPUT); // Pin 13 as a LED display (yellow).
   pinMode(SHUTDOWNPIN, INPUT_PULLUP);
-  Wire.begin();                 // join i2c bus (address optional for master)
-  Wire.onReceive(i2creceive);   // register receive event
-  I2Cdev::readTimeout = 20;     // 20 mS timeout.
+  WSWire.begin();                 // join i2c bus (address optional for master)
+  WSWire.onReceive(i2creceive);   // register receive event
   tick = 0;
+  nreadings = 0;
   delay(10000);                 // Allow a serial connection.
   }
 
@@ -163,9 +165,14 @@ loop()
   if (tick % 64 == 0)
     { // Every 960 mSec
 
+    bat_acc += analogRead(5);
+    pan_acc += analogRead(4);
+    nreadings++;
+
     if (adsl_to > 100)
       {
       processor_state[0] = ProcessorState::DOWN;
+      digitalWrite(K2, HIGH); // Ensure power is remove if not already.
       adsl_to = 0;
       if (Serial)
         Serial.println("0: DOWN");
@@ -173,6 +180,7 @@ loop()
     if (flarm_to > 100)
       {
       processor_state[1] = ProcessorState::DOWN;
+      digitalWrite(K2, HIGH); // Ensure power is remove if not already.
       flarm_to = 0;
       if (Serial)
         Serial.println("1: DOWN");
@@ -209,133 +217,137 @@ loop()
   if (tick % 1024 == 0)
     { // Every 15.360 Sec
 
-    // Read the battery and panel.
-    bat_v = analogRead(5);
-    pan_v = analogRead(4);
-
-    if (Serial)
+    if (nreadings >= 4)
       {
-      Serial.print("B: ");
-      Serial.println(bat_v, DEC);
-      Serial.print("P: ");
-      Serial.println(pan_v, DEC);
-      }
-    switch (processor_state[0])
-      {
-      case ProcessorState::DOWN:
-        if (bat_v > BAT_SETPOINT_5)
-          {
-          digitalWrite(K2, LOW);  // Powerup adsl.
-          processor_state[0] = ProcessorState::BOOTING;
-          if (Serial)
-            Serial.println("0: BOOTING");
-          }
-        break;
-      case ProcessorState::BOOTING:
-        if (bat_v < BAT_SETPOINT_2)
-          {
-          digitalWrite(K2, HIGH); // Not much else we can do here.
-          processor_state[0] = ProcessorState::DOWN;
-          if (Serial)
-            Serial.println("0: DOWN");
-          }
-        break;
-      case ProcessorState::UP:
-        if (bat_v < BAT_SETPOINT_3)
-          command(I2C_ADSL_ADDR, Command::KILL_APP);
-        if (bat_v < BAT_SETPOINT_2)
-          {
-          command(I2C_ADSL_ADDR, Command::DOWN);
-          processor_state[0] = ProcessorState::SHUTTINGDOWN;
-          if (Serial)
-            Serial.println("0: SHUTTINGDOWN");
-          }
-        if (bat_v < BAT_SETPOINT_1)
-          {
-          if (Serial)
-            Serial.println("2: DEAD FLAT");
-          digitalWrite(K3, HIGH); // This will certainly already be DOWN.
-          digitalWrite(K2, HIGH); // Likewise, this.
-          digitalWrite(K1, HIGH); // This kills everything including the
+      bat_v = bat_acc / nreadings;
+      pan_v = pan_acc / nreadings;
+      bat_acc = 0;
+      pan_acc = 0;
+      nreadings = 0;
+      if (Serial)
+        {
+        Serial.print("B: ");
+        Serial.println(bat_v, DEC);
+        Serial.print("P: ");
+        Serial.println(pan_v, DEC);
+        }
+      switch (processor_state[0])
+        {
+        case ProcessorState::DOWN:
+          if (bat_v > BAT_SETPOINT_5)
+            {
+            digitalWrite(K2, LOW);  // Powerup adsl.
+            processor_state[0] = ProcessorState::BOOTING;
+            if (Serial)
+              Serial.println("0: BOOTING");
+            }
+          break;
+        case ProcessorState::BOOTING:
+          if (bat_v < BAT_SETPOINT_2)
+            {
+            digitalWrite(K2, HIGH); // Not much else we can do here.
+            processor_state[0] = ProcessorState::DOWN;
+            if (Serial)
+              Serial.println("0: DOWN");
+            }
+          break;
+        case ProcessorState::UP:
+          if (bat_v < BAT_SETPOINT_3)
+            command(I2C_ADSL_ADDR, Command::KILL_APP);
+          if (bat_v < BAT_SETPOINT_2)
+            {
+            command(I2C_ADSL_ADDR, Command::DOWN);
+            processor_state[0] = ProcessorState::SHUTTINGDOWN;
+            if (Serial)
+              Serial.println("0: SHUTTINGDOWN");
+            }
+          if (bat_v < BAT_SETPOINT_1)
+            {
+            if (Serial)
+              Serial.println("2: DEAD FLAT");
+            digitalWrite(K3, HIGH); // This will certainly already be DOWN.
+            digitalWrite(K2, HIGH); // Likewise, this.
+            digitalWrite(K1, HIGH); // This kills everything including the
                                   // processor on which this program runs.
-          }
-        break;
-      case ProcessorState::IDLE:
-        if (bat_v > BAT_SETPOINT_4)
-          command(I2C_ADSL_ADDR, Command::LAUNCH_APP);
+            }
+          break;
+        case ProcessorState::IDLE:
+          if (bat_v > BAT_SETPOINT_4)
+            command(I2C_ADSL_ADDR, Command::LAUNCH_APP);
 
-        break;
-      }
+          break;
+        }
 
-    switch (panel_state)
-      {
-      case PanelState::DAY:
-        if (pan_v < PAN_SETPOINT_1)
-          {
-          panel_state = PanelState::NIGHT;
-          if (Serial)
-            Serial.println("NIGHT");
-          }
-        break;
-      case PanelState::NIGHT:
-        if (pan_v > PAN_SETPOINT_2)
-          {
-          panel_state = PanelState::DAY;
-          if (Serial)
+      switch (panel_state)
+        {
+        case PanelState::DAY:
+          if (pan_v < PAN_SETPOINT_1)
+            {
+            panel_state = PanelState::NIGHT;
+            if (Serial)
+              Serial.println("NIGHT");
+            }
+          break;
+        case PanelState::NIGHT:
+          if (pan_v > PAN_SETPOINT_2)
+            {
+            panel_state = PanelState::DAY;
+            if (Serial)
             Serial.println("DAY");
-          }
-        break;
-      }
+            }
+          break;
+        }
 
-    switch (processor_state[1])
-      {
-      case ProcessorState::DOWN:
-        if ((panel_state == PanelState::DAY) && (bat_v > BAT_SETPOINT_6))
-          {
-          digitalWrite(K3, LOW);
-          processor_state[1] = ProcessorState::BOOTING;
-          if (Serial)
-            Serial.println("1: BOOTING");
-          }
-        break;
-      case ProcessorState::BOOTING:
-        if (bat_v < BAT_SETPOINT_4)
-          {
-          digitalWrite(K3, HIGH); // Not much else we can do here.
-          processor_state[1] = ProcessorState::DOWN;
-          if (Serial)
-            Serial.println("1: DOWN");
-          }
-        break;
-      case ProcessorState::UP:
-        if (panel_state == PanelState::NIGHT)
-          {
-          command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTTINGDOWN;
-          if (Serial)
-            Serial.println("1: SHUTTINGDOWN");
-          }
-        else if (bat_v < BAT_SETPOINT_5)
-          command(I2C_FLARM_ADDR, Command::KILL_APP);
-        else if (bat_v < BAT_SETPOINT_4);
-          {
-          command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTTINGDOWN;
-          if (Serial)
-            Serial.println("1: SHUTTINGDOWN");
-          }
-        break;
-      case ProcessorState::IDLE:
-        if (panel_state == PanelState::NIGHT)
-          {
-          command(I2C_FLARM_ADDR, Command::DOWN);
-          processor_state[1] = ProcessorState::SHUTTINGDOWN;
-          if (Serial)
-            Serial.println("1: SHUTTINGDOWN");
-          }
-        else if (bat_v > BAT_SETPOINT_6)
-          command(I2C_FLARM_ADDR, Command::LAUNCH_APP);
-        break;
+      switch (processor_state[1])
+        {
+        case ProcessorState::DOWN:
+          if ((panel_state == PanelState::DAY) && (bat_v > BAT_SETPOINT_6))
+            {
+            digitalWrite(K3, LOW);
+            processor_state[1] = ProcessorState::BOOTING;
+            if (Serial)
+              Serial.println("1: BOOTING");
+            }
+          break;
+        case ProcessorState::BOOTING:
+          if (bat_v < BAT_SETPOINT_4)
+            {
+            digitalWrite(K3, HIGH); // Not much else we can do here.
+            processor_state[1] = ProcessorState::DOWN;
+            if (Serial)
+              Serial.println("1: DOWN");
+            }
+          break;
+        case ProcessorState::UP:
+          if (panel_state == PanelState::NIGHT)
+            {
+            command(I2C_FLARM_ADDR, Command::DOWN);
+            processor_state[1] = ProcessorState::SHUTTINGDOWN;
+            if (Serial)
+              Serial.println("1: SHUTTINGDOWN");
+            }
+          else if (bat_v < BAT_SETPOINT_5)
+            command(I2C_FLARM_ADDR, Command::KILL_APP);
+          else if (bat_v < BAT_SETPOINT_4);
+            {
+            command(I2C_FLARM_ADDR, Command::DOWN);
+            processor_state[1] = ProcessorState::SHUTTINGDOWN;
+            if (Serial)
+              Serial.println("1: SHUTTINGDOWN");
+            }
+          break;
+        case ProcessorState::IDLE:
+          if (panel_state == PanelState::NIGHT)
+            {
+            command(I2C_FLARM_ADDR, Command::DOWN);
+            processor_state[1] = ProcessorState::SHUTTINGDOWN;
+            if (Serial)
+              Serial.println("1: SHUTTINGDOWN");
+            }
+          else if (bat_v > BAT_SETPOINT_6)
+            command(I2C_FLARM_ADDR, Command::LAUNCH_APP);
+          break;
+        }
       }
 
     tick = 0; // Reset at the longest time interval to prevent overflow.
@@ -370,14 +382,46 @@ i2creceive(int n)
 bool
 poll(byte addr, volatile Reg0Response *r)
   {
-  return i2c.readByte(addr, 0, (byte *)r, 20);
+  bool rtn = false;
+  if (Serial)
+    {
+    Serial.print("poll ");
+    Serial.println(addr, DEC);
+    }
+#ifdef USE_I2C
+  rtn = i2c.readByte(addr, 0, (byte *)r, 20);
+#else
+  WSWire.beginTransmission(addr);
+  WSWire.write((uint8_t )0);
+  WSWire.endTransmission();
+  WSWire.beginTransmission(addr);
+  WSWire.requestFrom(addr, 1);
+  if (WSWire.available())
+    {
+    *r = Reg0Response(WSWire.read());
+    rtn = true;
+    }
+  else
+    rtn = false;
+#endif
+  Serial.println("poll return");
+  return rtn;
   }
 
 //------------------------------------------------------------------------------
 bool
 command(byte addr, Command c)
   {
+#ifdef USE_I2C
   return i2c.writeByte(addr, 0, (byte )c);
+#else
+  WSWire.beginTransmission(addr);
+  WSWire.write((uint8_t )0);
+  WSWire.endTransmission();
+  WSWire.beginTransmission(addr);
+  WSWire.write((byte )c);
+  return (WSWire.endTransmission() == 0) ? true : false;
+#endif
   }
 
 //------------------------------------------------------------------------------

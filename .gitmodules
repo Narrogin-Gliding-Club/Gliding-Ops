@@ -7,3 +7,6 @@
 [submodule "LogKeeper/src/lib/Low-Power"]
 	path = LogKeeper/src/lib/Low-Power
 	url = https://github.com/rocketscream/Low-Power.git
+[submodule "LogKeeper/src/lib/WSWireLib"]
+	path = LogKeeper/src/lib/WSWireLib
+	url = https://github.com/steamfire/WSWireLib.git
