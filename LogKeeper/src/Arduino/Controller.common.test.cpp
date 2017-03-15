@@ -35,7 +35,9 @@ Copyright_License {
 #define PIN04  4
 #define PIN05  5
 #define PIN06  6
-#define PINCLK 7
+#define PIN07  7
+#define PIN08  8
+#define PINCLK 9
 #define PWM1   11
 #define PWM2   10
 #define LED    13
@@ -56,11 +58,11 @@ setup()
   {
   pinMode(PIN00,  INPUT_PULLUP);
   pinMode(PIN01,  INPUT_PULLUP);
-  pinMode(PIN02,  INPUT_PULLUP);
-  pinMode(PIN03,  INPUT_PULLUP);
   pinMode(PIN04,  INPUT_PULLUP);
   pinMode(PIN05,  INPUT_PULLUP);
   pinMode(PIN06,  INPUT_PULLUP);
+  pinMode(PIN07,  INPUT_PULLUP);
+  pinMode(PIN08,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
   setBattery();
   setPanel();
@@ -83,11 +85,11 @@ loop()
     PanelState     csc;
     psc = ProcessorState(digitalRead(PIN00) * 1 + 
                          digitalRead(PIN01) * 2 +
-                         digitalRead(PIN02) * 4);
-    bsc = BatteryState(digitalRead(PIN03) * 1 +
-                       digitalRead(PIN04) * 2 +
-                       digitalRead(PIN05) * 4);
-    csc = PanelState(digitalRead(PIN06) * 1);
+                         digitalRead(PIN04) * 4);
+    bsc = BatteryState(digitalRead(PIN05) * 1 +
+                       digitalRead(PIN06) * 2 +
+                       digitalRead(PIN07) * 4);
+    csc = PanelState(digitalRead(PIN08) * 1);
     if (bsc != bs || csc != cs)
       {
       bs = bsc;
