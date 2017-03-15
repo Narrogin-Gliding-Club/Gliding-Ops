@@ -28,11 +28,12 @@ add_custom_target(hex
                           Controller.flarm.test.eep
                  )
 
-set(SERIAL "/dev/ttyACM0")
+set(SERIAL_DUT "/dev/ttyACM0")
+set(SERIAL_VTD "/dev/ttyACM1")
 set(AVRDUDE "/usr/share/arduino/hardware/tools/avrdude")
 set(AVRCONF "/usr/share/arduino/hardware/tools/avrdude.conf")
-add_custom_target(upload_Controller stty -F ${SERIAL} ospeed 1200 ispeed 1200
-                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL} -b57600 -D -Uflash:w:Controller.hex:i
+add_custom_target(upload_Controller stty -F ${SERIAL_DUT} ospeed 1200 ispeed 1200
+                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_DUT} -b57600 -D -Uflash:w:Controller.hex:i
                   DEPENDS Controller.hex
                   COMMENT Uploading Controller.hex
                  )
@@ -56,8 +57,8 @@ add_custom_command(OUTPUT Controller.adsl.test.eep
                    COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.adsl.test.elf Controller.adsl.test.eep
                    DEPENDS Controller.adsl.test.elf
                   )
-add_custom_target(upload_Controller.adsl.test stty -F ${SERIAL} ospeed 1200 ispeed 1200
-                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL} -b57600 -D -Uflash:w:Controller.adsl.test.hex:i
+add_custom_target(upload_Controller.adsl.test stty -F ${SERIAL_VTD} ospeed 1200 ispeed 1200
+                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_VTD} -b57600 -D -Uflash:w:Controller.adsl.test.hex:i
                   DEPENDS Controller.adsl.test.hex
                   COMMENT Uploading Controller.adsl.test.hex
                  )
@@ -81,8 +82,8 @@ add_custom_command(OUTPUT Controller.flarm.test.eep
                    COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.flarm.test.elf Controller.flarm.test.eep
                    DEPENDS Controller.flarm.test.elf
                   )
-add_custom_target(upload_Controller.flarm.test stty -F ${SERIAL} ospeed 1200 ispeed 1200
-                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL} -b57600 -D -Uflash:w:Controller.flarm.test.hex:i
+add_custom_target(upload_Controller.flarm.test stty -F ${SERIAL_VTD} ospeed 1200 ispeed 1200
+                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_VTD} -b57600 -D -Uflash:w:Controller.flarm.test.hex:i
                   DEPENDS Controller.flarm.test.hex
                   COMMENT Uploading Controller.flarm.test.hex
                  )
