@@ -383,17 +383,21 @@ bool
 poll(byte addr, volatile Reg0Response *r)
   {
   bool rtn = false;
-  if (Serial)
-    {
-    Serial.print("poll ");
-    Serial.println(addr, DEC);
-    }
+
 #ifdef USE_I2C
   rtn = i2c.readByte(addr, 0, (byte *)r, 20);
 #else
   WSWire.beginTransmission(addr);
   WSWire.write((uint8_t )0);
-  WSWire.endTransmission();
+  if (Serial)
+    {
+    Serial.print("poll ");
+    Serial.print(addr, DEC);
+    Serial.print(", return ");
+    Serial.println( WSWire.endTransmission(), DEC);
+    }
+  else
+    WSWire.endTransmission();
   WSWire.beginTransmission(addr);
   WSWire.requestFrom(addr, 1);
   if (WSWire.available())
@@ -404,7 +408,6 @@ poll(byte addr, volatile Reg0Response *r)
   else
     rtn = false;
 #endif
-  Serial.println("poll return");
   return rtn;
   }
 
