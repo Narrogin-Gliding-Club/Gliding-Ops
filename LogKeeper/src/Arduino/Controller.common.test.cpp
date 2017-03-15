@@ -65,6 +65,9 @@ setup()
   setBattery();
   setPanel();
   setI2C();
+  // activate internal pullups for twi. Sort of simulate the Pi.
+  digitalWrite(SDA, 1);
+  digitalWrite(SCL, 1);
   digitalWrite(LED, LOW);
   WSWire.onReceive(i2creceive);
   }
