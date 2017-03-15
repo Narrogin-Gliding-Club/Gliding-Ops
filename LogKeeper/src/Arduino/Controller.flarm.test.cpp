@@ -26,11 +26,13 @@ Copyright_License {
 #include "Arduino.h"
 #include "I2Cdev.h"
 
-#include <Wire.h>
+#include <WSWire.h>
+
+extern TwoWire WSWire;
 
 //------------------------------------------------------------------------------
 void
 setI2C()
   {
-  Wire.begin(65);
+  WSWire.begin(65);
   }
