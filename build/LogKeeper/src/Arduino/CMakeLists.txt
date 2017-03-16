@@ -27,6 +27,13 @@ add_custom_target(hex
                           Controller.flarm.test.hex
                           Controller.flarm.test.eep
                  )
+add_custom_command(OUTPUT Controller.s
+                   COMMAND ${CMAKE_CXX_COMPILER} -S ${CMAKE_CXX_FLAGS} -o Controller.s ${Arduino_SRC}/Controller.cpp
+                   DEPENDS ${Arduino_SRC}/Controller.cpp
+                  )
+add_custom_target(assembler
+                  DEPENDS Controller.s
+                 )
 
 set(SERIAL_DUT "/dev/ttyACM0")
 set(SERIAL_VTD "/dev/ttyACM1")
