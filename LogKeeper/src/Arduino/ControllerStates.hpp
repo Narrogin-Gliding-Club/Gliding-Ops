@@ -69,7 +69,7 @@ enum class Reg0Response : byte
   SHUTTINGDOWN,
   };
 
-enum class Reg1Command : byte
+enum class Reg1Response : byte
   {
   NONE,
   SHUTDOWNFLARM,

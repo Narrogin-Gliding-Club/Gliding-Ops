@@ -49,7 +49,10 @@ PanelState     cs = PanelState::NIGHT;
 void i2creceive(int n);
 void setBattery();
 void setPanel();
+bool poll(uint8_t addr, Reg0Response r0, Reg1Response r1);
+Reg0Response processorState2Reg0Response(ProcessorState s);
 extern void setI2C();
+extern uint8_t i2cAddr();
 TwoWire WSWire;
 
 //------------------------------------------------------------------------------
@@ -64,6 +67,7 @@ setup()
   pinMode(PIN07,  INPUT_PULLUP);
   pinMode(PIN08,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
+  Serial.begin(uint32_t(115200));// For debug.
   setBattery();
   setPanel();
   setI2C();
@@ -99,6 +103,8 @@ loop()
       }
     ps = psc;
     }
+  poll(i2cAddr(), processorState2Reg0Response(ps), Reg1Response::ENABLEFLARM);
+  delay(1000);
   }
 
 //------------------------------------------------------------------------------
@@ -106,9 +112,15 @@ void
 i2creceive(int n)
   {
   digitalWrite(LED, HIGH);
+  if (Serial)
+    {
+    Serial.print("i2creceive(");
+    Serial.print(n, DEC);
+    Serial.println(")");
+    }
   if (WSWire.available())
     if (WSWire.read() == 0);  // Should be register 0;
-      WSWire.write(byte(ps));    // Simulate processor status.
+      ;
   digitalWrite(LED, LOW);
   }
 
@@ -158,4 +170,49 @@ setPanel()
       analogWrite(PWM1, 420 / 4);
       break;
     }
+  }
+
+//------------------------------------------------------------------------------
+bool
+poll(uint8_t addr, Reg0Response r0, Reg1Response r1)
+  {
+  digitalWrite(LED, HIGH);
+  if (Serial)
+    {
+    Serial.print("poll(");
+    Serial.print(byte(r0), DEC);
+    Serial.println(")");
+    }
+  if (r0 != Reg0Response::UNKNOWN)
+    {
+    WSWire.beginTransmission(32);
+    WSWire.write(addr);
+    WSWire.write(byte(r0));
+    WSWire.write(byte(r1));
+    WSWire.endTransmission();
+    }
+  digitalWrite(LED, LOW);
+  return true;
+  }
+
+//------------------------------------------------------------------------------
+Reg0Response
+processorState2Reg0Response(ProcessorState s)
+  {
+  switch (s)
+    {
+    case ProcessorState::DOWN:
+    case ProcessorState::POWER_ON:
+    case ProcessorState::POWER_OFF:
+      return Reg0Response::UNKNOWN;
+    case ProcessorState::SHUTTINGDOWN:
+      return Reg0Response::SHUTTINGDOWN;
+    case ProcessorState::BOOTING:
+      return Reg0Response::BOOTING;
+    case ProcessorState::IDLE:
+      return Reg0Response::IDLE;
+    case ProcessorState::UP:
+      return Reg0Response::RUNNING;
+    }
+  return Reg0Response::UNKNOWN;
   }

@@ -63,10 +63,10 @@ ProcessorState processor_state[3] = {
  */
 void dispatch();
 void i2creceive(int n);
-bool poll(byte addr, volatile Reg0Response *r);
+bool poll(byte addr);
 void extract_command(byte addr, byte *c);
 bool command(byte addr, Command c);
-void update_processor_status(byte p, volatile Reg0Response b);
+void update_processor_status(byte p);
 
 // Global common.
 BatteryState   battery_state = BatteryState::FLAT;      // Until we know better.
@@ -76,8 +76,8 @@ volatile uint8_t adsl_to  = 0;
 volatile uint8_t flarm_to = 0;
 volatile uint16_t bat_v   = BAT_SETPOINT_7;  // Until the first A/D conversion.
 volatile uint16_t pan_v   = 0;
-volatile Reg0Response adsl_response;
-volatile Reg0Response flarm_response;
+volatile Reg0Response reg0Response[2];
+volatile Reg1Response reg1Response[2];
 byte led_state = 0;
 uint16_t bat_acc;
 uint16_t pan_acc;
@@ -190,25 +190,20 @@ loop()
         processor_state[0] == ProcessorState::POWER_ON ||
         processor_state[0] == ProcessorState::SHUTTINGDOWN)
       {
-      if (poll(I2C_ADSL_ADDR, &adsl_response) == true)
-        {
+      if (poll(I2C_ADSL_ADDR) == true)
         adsl_to = 0;
-        update_processor_status(0, adsl_response);
-        }
       else
         adsl_to++;
       }
+
     if (processor_state[1] == ProcessorState::UP       ||
         processor_state[1] == ProcessorState::IDLE     ||
         processor_state[1] == ProcessorState::BOOTING  ||
         processor_state[1] == ProcessorState::POWER_ON ||
         processor_state[1] == ProcessorState::SHUTTINGDOWN)
       {
-      if (poll(I2C_FLARM_ADDR, &flarm_response) == true)
-        {
+      if (poll(I2C_FLARM_ADDR) == true)
         flarm_to = 0;
-        update_processor_status(1, flarm_response);
-        }
       else
         flarm_to++;
       }
@@ -415,38 +410,44 @@ loop()
 void
 i2creceive(int n)
   {
+  uint8_t from;
+
+  if (Serial)
+    {
+    Serial.print("i2creceive(");
+    Serial.print(n, DEC);
+    Serial.println(")");
+    }
+  if (n == 3)
+    { // If not 3 then a problem?
+    if (WSWire.available())
+      {
+      from = WSWire.read() - 64;
+      if (from < 2)
+        {
+        if (WSWire.available())
+          reg0Response[from] = Reg0Response(WSWire.read());
+        if (WSWire.available())
+          {
+          reg1Response[from] = Reg1Response(WSWire.read());
+          update_processor_status(from);
+          }
+        }
+      }
+    }
   }
 
 //------------------------------------------------------------------------------
 bool
-poll(byte addr, volatile Reg0Response *r)
+poll(byte addr)
   {
-  bool rtn = false;
-  uint8_t result;
-
 #ifdef USE_I2C
-  rtn = i2c.readByte(addr, 0, (byte *)r, 20);
+  return i2c.writeByte(addr, 0, (byte *)r, 20);
 #else
   WSWire.beginTransmission(addr);
   WSWire.write((uint8_t )0);
-  result = WSWire.endTransmission();
-  if (result == 0)
-    {
-    WSWire.beginTransmission(addr);
-    delayMicroseconds(50);
-    WSWire.requestFrom(addr, (uint8_t)1);
-    if (WSWire.available())
-      {
-      *r = Reg0Response(WSWire.read());
-      rtn = true;
-      }
-    else
-      rtn = false;
-    }
-  else
-    rtn = false;
+  return (WSWire.endTransmission() == 0) ? true : false;
 #endif
-  return rtn;
   }
 
 //------------------------------------------------------------------------------
@@ -467,9 +468,9 @@ command(byte addr, Command c)
 
 //------------------------------------------------------------------------------
 void
-update_processor_status(byte p, volatile Reg0Response r)
+update_processor_status(byte p)
   {
-  switch (r)
+  switch (reg0Response[p])
     {
     case Reg0Response::SHUTTINGDOWN:
       processor_state[p] = ProcessorState::SHUTTINGDOWN;

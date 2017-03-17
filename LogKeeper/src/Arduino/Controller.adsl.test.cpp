@@ -34,5 +34,12 @@ extern TwoWire WSWire;
 void
 setI2C()
   {
-  WSWire.begin(64);
+  WSWire.begin(I2CADDRESS);
+  }
+
+//------------------------------------------------------------------------------
+uint8_t
+i2cAddr()
+  {
+  return I2CADDRESS;
   }

@@ -21,7 +21,7 @@ Copyright_License {
 }
 */
 
-#include "Controller.adsl.test.hpp"
+#include "Controller.flarm.test.hpp"
 #include "Controller.common.test.hpp"
 #include "Arduino.h"
 #include "I2Cdev.h"
@@ -34,5 +34,12 @@ extern TwoWire WSWire;
 void
 setI2C()
   {
-  WSWire.begin(65);
+  WSWire.begin(I2CADDRESS);
+  }
+
+//------------------------------------------------------------------------------
+uint8_t
+i2cAddr()
+  {
+  return I2CADDRESS;
   }
