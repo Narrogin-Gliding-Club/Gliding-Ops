@@ -55,17 +55,21 @@ enum class ProcessorState : byte
   SHUTTINGDOWN,
   BOOTING,
   IDLE,
-  UP
+  UP,
+  POWER_ON,
+  POWER_OFF
   };
 
 enum class Reg0Response : byte
   {
+  UNKNOWN,
+  BOOTING,
   RUNNING,
   IDLE,
   SHUTTINGDOWN,
   };
 
-enum class Reg1Command : byte
+enum class Reg1Response : byte
   {
   NONE,
   SHUTDOWNFLARM,

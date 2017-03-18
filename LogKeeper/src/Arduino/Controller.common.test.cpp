@@ -23,9 +23,8 @@ Copyright_License {
 
 #include "Controller.common.test.hpp"
 #include "Arduino.h"
-#include "I2Cdev.h"
 
-#include <Wire.h>
+#include <WSWire.h>
 
 #include "ControllerStates.hpp"
 
@@ -36,7 +35,9 @@ Copyright_License {
 #define PIN04  4
 #define PIN05  5
 #define PIN06  6
-#define PINCLK 7
+#define PIN07  7
+#define PIN08  8
+#define PINCLK 9
 #define PWM1   11
 #define PWM2   10
 #define LED    13
@@ -48,7 +49,11 @@ PanelState     cs = PanelState::NIGHT;
 void i2creceive(int n);
 void setBattery();
 void setPanel();
+bool poll(uint8_t addr, Reg0Response r0, Reg1Response r1);
+Reg0Response processorState2Reg0Response(ProcessorState s);
 extern void setI2C();
+extern uint8_t i2cAddr();
+TwoWire WSWire;
 
 //------------------------------------------------------------------------------
 void
@@ -56,16 +61,21 @@ setup()
   {
   pinMode(PIN00,  INPUT_PULLUP);
   pinMode(PIN01,  INPUT_PULLUP);
-  pinMode(PIN02,  INPUT_PULLUP);
-  pinMode(PIN03,  INPUT_PULLUP);
   pinMode(PIN04,  INPUT_PULLUP);
   pinMode(PIN05,  INPUT_PULLUP);
   pinMode(PIN06,  INPUT_PULLUP);
+  pinMode(PIN07,  INPUT_PULLUP);
+  pinMode(PIN08,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
+  Serial.begin(uint32_t(115200));// For debug.
   setBattery();
   setPanel();
   setI2C();
-  Wire.onReceive(i2creceive);
+  // activate internal pullups for twi. Sort of simulate the Pi.
+  digitalWrite(SDA, 1);
+  digitalWrite(SCL, 1);
+  digitalWrite(LED, LOW);
+  WSWire.onReceive(i2creceive);
   }
 
 //------------------------------------------------------------------------------
@@ -79,11 +89,11 @@ loop()
     PanelState     csc;
     psc = ProcessorState(digitalRead(PIN00) * 1 + 
                          digitalRead(PIN01) * 2 +
-                         digitalRead(PIN02) * 4);
-    bsc = BatteryState(digitalRead(PIN03) * 1 +
-                       digitalRead(PIN04) * 2 +
-                       digitalRead(PIN05) * 4);
-    csc = PanelState(digitalRead(PIN06) * 1);
+                         digitalRead(PIN04) * 4);
+    bsc = BatteryState(digitalRead(PIN05) * 1 +
+                       digitalRead(PIN06) * 2 +
+                       digitalRead(PIN07) * 4);
+    csc = PanelState(digitalRead(PIN08) * 1);
     if (bsc != bs || csc != cs)
       {
       bs = bsc;
@@ -93,6 +103,8 @@ loop()
       }
     ps = psc;
     }
+  poll(i2cAddr(), processorState2Reg0Response(ps), Reg1Response::ENABLEFLARM);
+  delay(1000);
   }
 
 //------------------------------------------------------------------------------
@@ -100,9 +112,15 @@ void
 i2creceive(int n)
   {
   digitalWrite(LED, HIGH);
-  if (Wire.available())
-    if (Wire.read() == 0);  // Should be register 0;
-      Wire.write(byte(ps));    // Simulate processor status.
+  if (Serial)
+    {
+    Serial.print("i2creceive(");
+    Serial.print(n, DEC);
+    Serial.println(")");
+    }
+  if (WSWire.available())
+    if (WSWire.read() == 0);  // Should be register 0;
+      ;
   digitalWrite(LED, LOW);
   }
 
@@ -152,4 +170,49 @@ setPanel()
       analogWrite(PWM1, 420 / 4);
       break;
     }
+  }
+
+//------------------------------------------------------------------------------
+bool
+poll(uint8_t addr, Reg0Response r0, Reg1Response r1)
+  {
+  digitalWrite(LED, HIGH);
+  if (Serial)
+    {
+    Serial.print("poll(");
+    Serial.print(byte(r0), DEC);
+    Serial.println(")");
+    }
+  if (r0 != Reg0Response::UNKNOWN)
+    {
+    WSWire.beginTransmission(32);
+    WSWire.write(addr);
+    WSWire.write(byte(r0));
+    WSWire.write(byte(r1));
+    WSWire.endTransmission();
+    }
+  digitalWrite(LED, LOW);
+  return true;
+  }
+
+//------------------------------------------------------------------------------
+Reg0Response
+processorState2Reg0Response(ProcessorState s)
+  {
+  switch (s)
+    {
+    case ProcessorState::DOWN:
+    case ProcessorState::POWER_ON:
+    case ProcessorState::POWER_OFF:
+      return Reg0Response::UNKNOWN;
+    case ProcessorState::SHUTTINGDOWN:
+      return Reg0Response::SHUTTINGDOWN;
+    case ProcessorState::BOOTING:
+      return Reg0Response::BOOTING;
+    case ProcessorState::IDLE:
+      return Reg0Response::IDLE;
+    case ProcessorState::UP:
+      return Reg0Response::RUNNING;
+    }
+  return Reg0Response::UNKNOWN;
   }
