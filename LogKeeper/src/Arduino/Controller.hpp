@@ -28,3 +28,149 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _CONTROLLER_HPP_
+#define _CONTROLLER_HPP_
+
+#include <Arduino.h>
+
+enum class BatteryState
+  {
+  DEAD_FLAT,
+  FLAT,
+  DISCHARGED,
+  REDUCED,
+  PARTIAL,
+  NOMINAL,
+  FULL,
+  OVER,
+  };
+
+enum class PanelState
+  {
+  DAY,
+  NIGHT
+  };
+
+enum class ProcessorState
+  {
+  DOWN,
+  SHUTTINGDOWN,
+  BOOTING,
+  IDLE,
+  RUNNING,
+  POWER_ON,
+  POWER_OFF
+  };
+
+enum class Reg0Response
+  {
+  UNKNOWN,
+  BOOTING,
+  RUNNING,
+  IDLE,
+  SHUTTINGDOWN,
+  };
+
+enum class Reg1Response
+  {
+  NONE,
+  SHUTDOWNFLARM,
+  ENABLEFLARM,    // Signal that FLARM may be turned on today.
+  SHUTDOWNADSL,
+  };
+
+enum class Command
+  {
+  NONE,
+  DOWN,
+  KILL_APP,
+  LAUNCH_APP,
+  };
+
+class Processor
+  {
+public:
+  Processor();
+
+  virtual ~Processor();
+
+  virtual void KillApp();
+  virtual void RunApp();
+  virtual void Tick2();
+  virtual void Tick4();
+  virtual void Tick8();
+  virtual void Tick32();
+  virtual void Tick64();
+  virtual void Tick1024();
+  ProcessorState State() const;
+
+protected:
+  virtual void PowerOff() = 0;
+  virtual void PowerOn() = 0;
+  virtual void ShutDown() = 0;
+
+  ProcessorState state;
+  uint8_t power_off_timer;
+
+private:
+  };
+
+class Adsl : public Processor
+  {
+public:
+  Adsl();
+
+  virtual ~Adsl();
+
+  void KillApp();
+  void RunApp();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  };
+
+class Flarm : public Processor
+  {
+public:
+  Flarm();
+
+  virtual ~Flarm();
+
+  void KillApp();
+  void RunApp();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  };
+
+class Arduino : public Processor
+  {
+public:
+  Arduino();
+
+  virtual ~Arduino();
+  void Tick8();
+  void Tick32();
+  void Tick64();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  uint8_t led_state;
+  };
+
+#endif // _CONTROLLER_HPP_

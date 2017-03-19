@@ -22,10 +22,8 @@ add_custom_command(OUTPUT Controller.eep
 add_custom_target(hex
                   DEPENDS Controller.hex 
                           Controller.eep
-                          Controller.adsl.test.hex
-                          Controller.adsl.test.eep
-                          Controller.flarm.test.hex
-                          Controller.flarm.test.eep
+                          Controller.test.hex
+                          Controller.test.eep
                  )
 add_custom_command(OUTPUT Controller.s
                    COMMAND ${CMAKE_CXX_COMPILER} -S ${CMAKE_CXX_FLAGS} -o Controller.s ${Arduino_SRC}/Controller.cpp
@@ -45,52 +43,27 @@ add_custom_target(upload_Controller stty -F ${SERIAL_DUT} ospeed 1200 ispeed 120
                   COMMENT Uploading Controller.hex
                  )
 
-add_executable(Controller.adsl.test.elf
-               ${Arduino_SRC}/Controller.common.test.cpp
-               ${Arduino_SRC}/Controller.adsl.test.cpp
+add_executable(Controller.test.elf
+               ${Arduino_SRC}/Controller.test.cpp
               )
-target_link_libraries(Controller.adsl.test.elf
+target_link_libraries(Controller.test.elf
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/MsTimer2/libMsTimer2.a
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/i2cdevlib/Arduino/I2Cdev/libI2Cdev.a
                       ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/Low-Power/libLowPower.a
                       Arduino
                       core
                      )
-add_custom_command(OUTPUT Controller.adsl.test.hex
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.adsl.test.elf Controller.adsl.test.hex
-                  DEPENDS Controller.adsl.test.elf
+add_custom_command(OUTPUT Controller.test.hex
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.test.elf Controller.test.hex
+                  DEPENDS Controller.test.elf
                   )
-add_custom_command(OUTPUT Controller.adsl.test.eep
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.adsl.test.elf Controller.adsl.test.eep
-                   DEPENDS Controller.adsl.test.elf
+add_custom_command(OUTPUT Controller.test.eep
+                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.test.elf Controller.test.eep
+                   DEPENDS Controller.test.elf
                   )
-add_custom_target(upload_Controller.adsl.test stty -F ${SERIAL_VTD} ospeed 1200 ispeed 1200
-                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_VTD} -b57600 -D -Uflash:w:Controller.adsl.test.hex:i
-                  DEPENDS Controller.adsl.test.hex
-                  COMMENT Uploading Controller.adsl.test.hex
+add_custom_target(upload_Controller.test stty -F ${SERIAL_VTD} ospeed 1200 ispeed 1200
+                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_VTD} -b57600 -D -Uflash:w:Controller.test.hex:i
+                  DEPENDS Controller.test.hex
+                  COMMENT Uploading Controller.test.hex
                  )
 
-add_executable(Controller.flarm.test.elf
-               ${Arduino_SRC}/Controller.common.test.cpp
-               ${Arduino_SRC}/Controller.flarm.test.cpp
-              )
-target_link_libraries(Controller.flarm.test.elf
-                      ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/MsTimer2/libMsTimer2.a
-                      ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/i2cdevlib/Arduino/I2Cdev/libI2Cdev.a
-                      ${Glider-Ops_BINARY_DIR}/build/LogKeeper/src/lib/Low-Power/libLowPower.a
-                      Arduino
-                      core
-                     )
-add_custom_command(OUTPUT Controller.flarm.test.hex
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom Controller.flarm.test.elf Controller.flarm.test.hex
-                  DEPENDS Controller.flarm.test.elf
-                  )
-add_custom_command(OUTPUT Controller.flarm.test.eep
-                   COMMAND ${CMAKE_OBJCOPY} -O ihex -j .eeprom Controller.flarm.test.elf Controller.flarm.test.eep
-                   DEPENDS Controller.flarm.test.elf
-                  )
-add_custom_target(upload_Controller.flarm.test stty -F ${SERIAL_VTD} ospeed 1200 ispeed 1200
-                  COMMAND ${AVRDUDE} -C${AVRCONF} -patmega32u4 -cavr109 -P${SERIAL_VTD} -b57600 -D -Uflash:w:Controller.flarm.test.hex:i
-                  DEPENDS Controller.flarm.test.hex
-                  COMMENT Uploading Controller.flarm.test.hex
-                 )
