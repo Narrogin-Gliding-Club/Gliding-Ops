@@ -28,61 +28,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CONTROLLERSTATES_HPP_
-#define _CONTROLLERSTATES_HPP_
+#ifndef _CONTROLLER_TEST_HPP_
+#define _CONTROLLER_TEST_HPP_
 
-enum class BatteryState : byte
-  {
-  DEAD_FLAT,
-  FLAT,
-  DISCHARGED,
-  REDUCED,
-  PARTIAL,
-  NOMINAL,
-  FULL,
-  OVER,
-  };
+/**
+ * Test harness for Controller.cpp.
+ */
 
-enum class PanelState : byte
-  {
-  DAY,
-  NIGHT
-  };
-
-enum class ProcessorState : byte
-  {
-  DOWN,
-  SHUTTINGDOWN,
-  BOOTING,
-  IDLE,
-  UP,
-  POWER_ON,
-  POWER_OFF
-  };
-
-enum class Reg0Response : byte
-  {
-  UNKNOWN,
-  BOOTING,
-  RUNNING,
-  IDLE,
-  SHUTTINGDOWN,
-  };
-
-enum class Reg1Response : byte
-  {
-  NONE,
-  SHUTDOWNFLARM,
-  ENABLEFLARM,    // Signal that FLARM may be turned on today.
-  SHUTDOWNADSL,
-  };
-
-enum class Command : byte
-  {
-  NONE,
-  DOWN,
-  KILL_APP,
-  LAUNCH_APP,
-  };
-
-#endif  // _CONTROLLERSTATES_HPP_
+#endif  // _CONTROLLER_TEST_HPP_

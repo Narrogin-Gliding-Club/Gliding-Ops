@@ -28,3 +28,166 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _CONTROLLER_HPP_
+#define _CONTROLLER_HPP_
+
+#include <Arduino.h>
+
+enum class BatteryState : uint8_t
+  {
+  DEAD_FLAT,
+  FLAT,
+  DISCHARGED,
+  REDUCED,
+  PARTIAL,
+  NOMINAL,
+  FULL,
+  OVER,
+  };
+
+enum class PanelState : uint8_t
+  {
+  NIGHT,
+  DAY,
+  };
+
+enum class ProcessorState : uint8_t
+  {
+  DOWN,
+  SHUTTINGDOWN,
+  BOOTING,
+  IDLE,
+  RUNNING,
+  POWER_ON,
+  POWER_OFF
+  };
+
+enum class Reg0Response : uint8_t
+  {
+  UNKNOWN,
+  BOOTING,
+  RUNNING,
+  IDLE,
+  SHUTTINGDOWN,
+  };
+
+enum class Reg1Response : uint8_t
+  {
+  NONE,
+  SHUTDOWNFLARM,
+  ENABLEFLARM,    // Signal that FLARM may be turned on today.
+  SHUTDOWNADSL,
+  };
+
+enum class Command : uint8_t
+  {
+  NONE,
+  DOWN,
+  KILL_APP,
+  LAUNCH_APP,
+  };
+
+class Processor
+  {
+public:
+  Processor();
+  virtual ~Processor();
+
+  virtual void KillApp();
+  virtual void RunApp();
+  virtual void Tick2();
+  virtual void Tick4();
+  virtual void Tick8();
+  virtual void Tick32();
+  virtual void Tick64();
+  virtual void Tick1024();
+  ProcessorState State() const;
+
+protected:
+  virtual void PowerOff() = 0;
+  virtual void PowerOn() = 0;
+  virtual void ShutDown() = 0;
+
+  ProcessorState state;
+  uint8_t power_timer;
+
+private:
+  };
+
+class Adsl : public Processor
+  {
+public:
+  Adsl();
+  virtual ~Adsl();
+
+  void KillApp();
+  void RunApp();
+  void Tick64();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  };
+
+class Flarm : public Processor
+  {
+public:
+  Flarm();
+  virtual ~Flarm();
+
+  void KillApp();
+  void RunApp();
+  void Tick64();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  };
+
+class Arduino : public Processor
+  {
+public:
+  Arduino();
+  virtual ~Arduino();
+
+  void Tick8();
+  void Tick32();
+  void Tick64();
+  void Tick1024();
+
+protected:
+  void PowerOff();
+  void PowerOn();
+  void ShutDown();
+
+private:
+  uint8_t led_state;
+  };
+
+class Switch : public Processor
+  {
+public:
+  Switch();
+  virtual ~Switch();
+
+  void Tick64();
+  void Tick1024();
+
+  void PowerOff();
+
+protected:
+  void PowerOn();
+  void ShutDown();
+
+private:
+  };
+
+#endif // _CONTROLLER_HPP_

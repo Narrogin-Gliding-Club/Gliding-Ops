@@ -21,12 +21,12 @@ Copyright_License {
 }
 */
 
-#include "Controller.common.test.hpp"
+#include "Controller.test.hpp"
 #include "Arduino.h"
 
-#include <WSWire.h>
+#include "Controller.hpp"
 
-#include "ControllerStates.hpp"
+#include <WSWire.h>
 
 #define PIN00  0
 #define PIN01  1
@@ -37,22 +37,28 @@ Copyright_License {
 #define PIN06  6
 #define PIN07  7
 #define PIN08  8
+#define PIN12 12
+#define PIN13 13
 #define PINCLK 9
 #define PWM1   11
 #define PWM2   10
 #define LED    13
 
-ProcessorState ps = ProcessorState::DOWN;
 BatteryState   bs = BatteryState::DEAD_FLAT;
 PanelState     cs = PanelState::NIGHT;
+bool p0_up  = false;
+bool p0_app = false;
+bool p1_up  = false;
+bool p1_app = false;
 
-void i2creceive(int n);
+uint16_t tick;
+uint8_t  flarm_allow;
+
 void setBattery();
 void setPanel();
-bool poll(uint8_t addr, Reg0Response r0, Reg1Response r1);
-Reg0Response processorState2Reg0Response(ProcessorState s);
-extern void setI2C();
-extern uint8_t i2cAddr();
+bool poll(uint8_t addr, uint8_t data);
+void i2creceive(int n);
+
 TwoWire WSWire;
 
 //------------------------------------------------------------------------------
@@ -66,16 +72,18 @@ setup()
   pinMode(PIN06,  INPUT_PULLUP);
   pinMode(PIN07,  INPUT_PULLUP);
   pinMode(PIN08,  INPUT_PULLUP);
+  pinMode(PIN12,  INPUT_PULLUP);
+  pinMode(PIN13,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
   Serial.begin(uint32_t(115200));// For debug.
+  WSWire.begin(64);
+  digitalWrite(SCL, 1);   // Turn on i2c pullups.
+  digitalWrite(SDA, 1);
+  WSWire.onReceive(i2creceive);
   setBattery();
   setPanel();
-  setI2C();
-  // activate internal pullups for twi. Sort of simulate the Pi.
-  digitalWrite(SDA, 1);
-  digitalWrite(SCL, 1);
-  digitalWrite(LED, LOW);
-  WSWire.onReceive(i2creceive);
+  tick = 0;
+  flarm_allow = 0;
   }
 
 //------------------------------------------------------------------------------
@@ -84,12 +92,8 @@ loop()
   {
   if (digitalRead(PINCLK) == LOW)
     {   // Don't bother to debounce.
-    ProcessorState psc;
     BatteryState   bsc;
     PanelState     csc;
-    psc = ProcessorState(digitalRead(PIN00) * 1 + 
-                         digitalRead(PIN01) * 2 +
-                         digitalRead(PIN04) * 4);
     bsc = BatteryState(digitalRead(PIN05) * 1 +
                        digitalRead(PIN06) * 2 +
                        digitalRead(PIN07) * 4);
@@ -101,27 +105,40 @@ loop()
       setBattery();
       setPanel();
       }
-    ps = psc;
     }
-  poll(i2cAddr(), processorState2Reg0Response(ps), Reg1Response::ENABLEFLARM);
-  delay(1000);
-  }
 
-//------------------------------------------------------------------------------
-void
-i2creceive(int n)
-  {
-  digitalWrite(LED, HIGH);
-  if (Serial)
+  if (tick % 10 == 0)
     {
-    Serial.print("i2creceive(");
-    Serial.print(n, DEC);
-    Serial.println(")");
+    p0_up  = !bool(digitalRead(PIN00));
+    p0_app = !bool(digitalRead(PIN01));
+    p1_up  = !bool(digitalRead(PIN12));
+    p1_app = !bool(digitalRead(PIN13));
+    if (Serial)
+      {
+      Serial.print("Adsl processor: ");
+      Serial.print((p0_up  == true) ? "UP" : "DOWN");
+      Serial.print(", Adsl app: ");
+      Serial.print((p0_app == true) ? "RUN" : "IDLE");
+      Serial.print(", Flarm processor: ");
+      Serial.print((p1_up  == true) ? "UP" : "DOWN");
+      Serial.print(", Flarm app: ");
+      Serial.print((p1_app == true) ? "RUN" : "IDLE");
+      Serial.println();
+      }
     }
-  if (WSWire.available())
-    if (WSWire.read() == 0);  // Should be register 0;
-      ;
-  digitalWrite(LED, LOW);
+  if (tick % 100 == 0)
+    poll(32, flarm_allow);
+  if (tick >= 10000)
+    {
+    if (flarm_allow == 0)
+      flarm_allow = 1;
+    else
+      flarm_allow = 0;
+    tick = 0;
+    }
+  tick++;
+
+  delay(100);
   }
 
 //------------------------------------------------------------------------------
@@ -174,45 +191,15 @@ setPanel()
 
 //------------------------------------------------------------------------------
 bool
-poll(uint8_t addr, Reg0Response r0, Reg1Response r1)
+poll(uint8_t addr, uint8_t data)
   {
-  digitalWrite(LED, HIGH);
-  if (Serial)
-    {
-    Serial.print("poll(");
-    Serial.print(byte(r0), DEC);
-    Serial.println(")");
-    }
-  if (r0 != Reg0Response::UNKNOWN)
-    {
-    WSWire.beginTransmission(32);
-    WSWire.write(addr);
-    WSWire.write(byte(r0));
-    WSWire.write(byte(r1));
-    WSWire.endTransmission();
-    }
-  digitalWrite(LED, LOW);
-  return true;
+  WSWire.beginTransmission(addr);
+  WSWire.write(data);
+  return (WSWire.endTransmission() == 0) ? true : false;
   }
 
 //------------------------------------------------------------------------------
-Reg0Response
-processorState2Reg0Response(ProcessorState s)
+void
+i2creceive(int n)
   {
-  switch (s)
-    {
-    case ProcessorState::DOWN:
-    case ProcessorState::POWER_ON:
-    case ProcessorState::POWER_OFF:
-      return Reg0Response::UNKNOWN;
-    case ProcessorState::SHUTTINGDOWN:
-      return Reg0Response::SHUTTINGDOWN;
-    case ProcessorState::BOOTING:
-      return Reg0Response::BOOTING;
-    case ProcessorState::IDLE:
-      return Reg0Response::IDLE;
-    case ProcessorState::UP:
-      return Reg0Response::RUNNING;
-    }
-  return Reg0Response::UNKNOWN;
   }
