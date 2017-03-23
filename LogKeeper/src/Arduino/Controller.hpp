@@ -33,7 +33,7 @@
 
 #include <Arduino.h>
 
-enum class BatteryState
+enum class BatteryState : uint8_t
   {
   DEAD_FLAT,
   FLAT,
@@ -45,13 +45,13 @@ enum class BatteryState
   OVER,
   };
 
-enum class PanelState
+enum class PanelState : uint8_t
   {
+  NIGHT,
   DAY,
-  NIGHT
   };
 
-enum class ProcessorState
+enum class ProcessorState : uint8_t
   {
   DOWN,
   SHUTTINGDOWN,
@@ -62,7 +62,7 @@ enum class ProcessorState
   POWER_OFF
   };
 
-enum class Reg0Response
+enum class Reg0Response : uint8_t
   {
   UNKNOWN,
   BOOTING,
@@ -71,7 +71,7 @@ enum class Reg0Response
   SHUTTINGDOWN,
   };
 
-enum class Reg1Response
+enum class Reg1Response : uint8_t
   {
   NONE,
   SHUTDOWNFLARM,
@@ -79,7 +79,7 @@ enum class Reg1Response
   SHUTDOWNADSL,
   };
 
-enum class Command
+enum class Command : uint8_t
   {
   NONE,
   DOWN,
@@ -91,7 +91,6 @@ class Processor
   {
 public:
   Processor();
-
   virtual ~Processor();
 
   virtual void KillApp();
@@ -110,7 +109,7 @@ protected:
   virtual void ShutDown() = 0;
 
   ProcessorState state;
-  uint8_t power_off_timer;
+  uint8_t power_timer;
 
 private:
   };
@@ -119,11 +118,11 @@ class Adsl : public Processor
   {
 public:
   Adsl();
-
   virtual ~Adsl();
 
   void KillApp();
   void RunApp();
+  void Tick64();
   void Tick1024();
 
 protected:
@@ -138,11 +137,11 @@ class Flarm : public Processor
   {
 public:
   Flarm();
-
   virtual ~Flarm();
 
   void KillApp();
   void RunApp();
+  void Tick64();
   void Tick1024();
 
 protected:
@@ -157,8 +156,8 @@ class Arduino : public Processor
   {
 public:
   Arduino();
-
   virtual ~Arduino();
+
   void Tick8();
   void Tick32();
   void Tick64();
@@ -171,6 +170,24 @@ protected:
 
 private:
   uint8_t led_state;
+  };
+
+class Switch : public Processor
+  {
+public:
+  Switch();
+  virtual ~Switch();
+
+  void Tick64();
+  void Tick1024();
+
+  void PowerOff();
+
+protected:
+  void PowerOn();
+  void ShutDown();
+
+private:
   };
 
 #endif // _CONTROLLER_HPP_

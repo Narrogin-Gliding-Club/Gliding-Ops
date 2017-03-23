@@ -26,6 +26,8 @@ Copyright_License {
 
 #include "Controller.hpp"
 
+#include <WSWire.h>
+
 #define PIN00  0
 #define PIN01  1
 #define PIN02  2
@@ -35,6 +37,8 @@ Copyright_License {
 #define PIN06  6
 #define PIN07  7
 #define PIN08  8
+#define PIN12 12
+#define PIN13 13
 #define PINCLK 9
 #define PWM1   11
 #define PWM2   10
@@ -42,9 +46,20 @@ Copyright_License {
 
 BatteryState   bs = BatteryState::DEAD_FLAT;
 PanelState     cs = PanelState::NIGHT;
+bool p0_up  = false;
+bool p0_app = false;
+bool p1_up  = false;
+bool p1_app = false;
+
+uint16_t tick;
+uint8_t  flarm_allow;
 
 void setBattery();
 void setPanel();
+bool poll(uint8_t addr, uint8_t data);
+void i2creceive(int n);
+
+TwoWire WSWire;
 
 //------------------------------------------------------------------------------
 void
@@ -57,12 +72,18 @@ setup()
   pinMode(PIN06,  INPUT_PULLUP);
   pinMode(PIN07,  INPUT_PULLUP);
   pinMode(PIN08,  INPUT_PULLUP);
+  pinMode(PIN12,  INPUT_PULLUP);
+  pinMode(PIN13,  INPUT_PULLUP);
   pinMode(PINCLK, INPUT_PULLUP);
   Serial.begin(uint32_t(115200));// For debug.
+  WSWire.begin(64);
+  digitalWrite(SCL, 1);   // Turn on i2c pullups.
+  digitalWrite(SDA, 1);
+  WSWire.onReceive(i2creceive);
   setBattery();
   setPanel();
-  // activate internal pullups for twi. Sort of simulate the Pi.
-  digitalWrite(LED, LOW);
+  tick = 0;
+  flarm_allow = 0;
   }
 
 //------------------------------------------------------------------------------
@@ -85,6 +106,38 @@ loop()
       setPanel();
       }
     }
+
+  if (tick % 10 == 0)
+    {
+    p0_up  = !bool(digitalRead(PIN00));
+    p0_app = !bool(digitalRead(PIN01));
+    p1_up  = !bool(digitalRead(PIN12));
+    p1_app = !bool(digitalRead(PIN13));
+    if (Serial)
+      {
+      Serial.print("Adsl processor: ");
+      Serial.print((p0_up  == true) ? "UP" : "DOWN");
+      Serial.print(", Adsl app: ");
+      Serial.print((p0_app == true) ? "RUN" : "IDLE");
+      Serial.print(", Flarm processor: ");
+      Serial.print((p1_up  == true) ? "UP" : "DOWN");
+      Serial.print(", Flarm app: ");
+      Serial.print((p1_app == true) ? "RUN" : "IDLE");
+      Serial.println();
+      }
+    }
+  if (tick % 100 == 0)
+    poll(32, flarm_allow);
+  if (tick >= 10000)
+    {
+    if (flarm_allow == 0)
+      flarm_allow = 1;
+    else
+      flarm_allow = 0;
+    tick = 0;
+    }
+  tick++;
+
   delay(100);
   }
 
@@ -136,3 +189,17 @@ setPanel()
     }
   }
 
+//------------------------------------------------------------------------------
+bool
+poll(uint8_t addr, uint8_t data)
+  {
+  WSWire.beginTransmission(addr);
+  WSWire.write(data);
+  return (WSWire.endTransmission() == 0) ? true : false;
+  }
+
+//------------------------------------------------------------------------------
+void
+i2creceive(int n)
+  {
+  }

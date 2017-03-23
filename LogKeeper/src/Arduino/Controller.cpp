@@ -31,12 +31,12 @@ Copyright_License {
 #include <WSWire.h>
 
 #define LED_BUILTIN    13
-#define K1             12
-#define K2             11
-#define K3             10
-#define K4              9
-#define P0UP            0
-#define P0APP           1
+#define K1              9
+#define K2             10
+#define K3             11
+#define K4             12
+#define P0UP            6
+#define P0APP           7
 #define P1UP            4
 #define P1APP           5
 #define SHUTDOWNPIN     8
@@ -70,11 +70,13 @@ volatile uint16_t pan_v   = 0;
 uint16_t bat_acc;
 uint16_t pan_acc;
 uint8_t  nreadings;
-uint8_t  i2cbuffer[64];
+volatile bool flarm_allow;
+volatile bool flarm_received;
 
-Arduino arduino;
-Adsl    adsl;
-Flarm   flarm;
+Arduino *arduino;
+Adsl    *adsl;
+Flarm   *flarm;
+Switch  *lan;
 TwoWire WSWire;
 
 //------------------------------------------------------------------------------
@@ -83,13 +85,23 @@ setup()
   {
   Serial.begin(uint32_t(115200));// For debug.
   pinMode(LED_BUILTIN, OUTPUT); // Pin 13 as a LED display (yellow).
+  digitalWrite(LED_BUILTIN, HIGH);
   pinMode(SHUTDOWNPIN, INPUT_PULLUP);
+  ::arduino = new Arduino();
+  ::adsl    = new Adsl();
+  ::flarm   = new Flarm();
+  ::lan     = new Switch();
   WSWire.begin(32);             // join i2c bus master and slave 32. Not used
                                 // at this time.
+  digitalWrite(SCL, 0);         // Turn off i2c pullups for 3v3 Pi.
+  digitalWrite(SDA, 0);
   WSWire.onReceive(i2creceive); // register receive event
-  tick = 0;
-  nreadings = 0;
+  ::tick           = 0;
+  ::nreadings      = 0;
+  ::flarm_allow    = false;
+  ::flarm_received = false;
   delay(10000);                 // Allow a serial connection.
+  digitalWrite(LED_BUILTIN, LOW);
   }
 
 //------------------------------------------------------------------------------
@@ -98,48 +110,54 @@ loop()
   {
   if ((tick % 2) == 0)
     { // Every 30 mSec
-    arduino.Tick2();
-    adsl.Tick2();
-    flarm.Tick2();
+    ::arduino->Tick2();
+    ::adsl->Tick2();
+    ::flarm->Tick2();
+    ::lan->Tick2();
     }
 
   if ((tick % 4) == 0)
     { // Every 60 mSec
-    arduino.Tick4();
-    adsl.Tick4();
-    flarm.Tick4();
+    ::arduino->Tick4();
+    ::adsl->Tick4();
+    ::flarm->Tick4();
+    ::lan->Tick4();
     }
 
   if ((tick % 8) == 0)
     { // Every 120 mSec
-    arduino.Tick8();
-    adsl.Tick8();
-    flarm.Tick8();
+    ::arduino->Tick8();
+    ::adsl->Tick8();
+    ::flarm->Tick8();
+    ::lan->Tick8();
     }
 
   if ((tick % 32) == 0)
     { // Every 480 mSec
-    arduino.Tick32();
-    adsl.Tick32();
-    flarm.Tick32();
+    ::arduino->Tick32();
+    ::adsl->Tick32();
+    ::flarm->Tick32();
+    ::lan->Tick32();
     }
 
   if ((tick % 64) == 0)
     { // Every 960 mSec
-    arduino.Tick64();
-    adsl.Tick64();
-    flarm.Tick64();
+    ::arduino->Tick64();
+    ::adsl->Tick64();
+    ::flarm->Tick64();
+    ::lan->Tick64();
     }
   
   if ((tick % 1024) == 0)
     { // Every 15.360 Sec
-    arduino.Tick1024();
-    adsl.Tick1024();
-    flarm.Tick1024();
+    ::arduino->Tick1024();
+    ::adsl->Tick1024();
+    ::flarm->Tick1024();
+    ::lan->Tick1024();
 
-    tick = 0; // Reset at the longest time interval to prevent overflow.
+    ::tick = 0; // Reset at the longest time interval to prevent overflow.
     }
-  tick++;
+  ::tick++;
 
   if (!Serial)
     {
@@ -163,27 +181,11 @@ loop()
 void
 i2creceive(int n)
   {
-  uint8_t from;
-
-  if (Serial)
-    {
-    Serial.print("i2creceive(");
-    Serial.print(n, DEC);
-    Serial.println(")");
-    }
-  if (n == 3)
-    { // If not 3 then a problem?
+  ::flarm_received = true;
+  if (n == 1)
+    { // If not 1 then a problem?
     if (WSWire.available())
-      {
-      from = WSWire.read() - 64;
-      if (from < 2)
-        {
-        if (WSWire.available())
-          i2cbuffer[0] = WSWire.read();
-        if (WSWire.available())
-          i2cbuffer[1] = WSWire.read();
-        }
-      }
+      flarm_allow = bool(WSWire.read());
     }
   }
 
@@ -191,19 +193,15 @@ i2creceive(int n)
 bool
 poll(byte addr)
   {
-#ifdef USE_I2C
-  return i2c.writeByte(addr, 0, NULL, 20);
-#else
   WSWire.beginTransmission(addr);
   WSWire.write((uint8_t )0);
   return (WSWire.endTransmission() == 0) ? true : false;
-#endif
   }
 
 //------------------------------------------------------------------------------
 Processor::Processor()
   {
-  this->power_off_timer = 0;
+  this->power_timer = 0;
   }
 
 //------------------------------------------------------------------------------
@@ -215,7 +213,8 @@ Processor::~Processor()
 void
 Processor::Tick2()
   {
-  if (digitalRead(SHUTDOWNPIN) == LOW)
+  if ((digitalRead(SHUTDOWNPIN) == LOW) &&
+      (this->state != ProcessorState::SHUTTINGDOWN))
     { // Do not bother to debounce
     this->ShutDown();
     }
@@ -245,13 +244,13 @@ Processor::Tick64()
   {
   if (this->state == ProcessorState::SHUTTINGDOWN)
     {
-    if (this->power_off_timer > 128)
+    if (this->power_timer > 128)
       this->PowerOff();
     else
-      this->power_off_timer++;
+      this->power_timer++;
     }
   else
-    this->power_off_timer = 0;
+    this->power_timer = 0;
   }
 
 //------------------------------------------------------------------------------
@@ -297,6 +296,13 @@ Adsl::~Adsl()
 
 //------------------------------------------------------------------------------
 void
+Adsl::Tick64()
+  {
+  Processor::Tick64();
+  }
+
+//------------------------------------------------------------------------------
+void
 Adsl::Tick1024()
   {
   Processor::Tick1024();
@@ -316,6 +322,8 @@ Adsl::Tick1024()
     case ProcessorState::IDLE:
       if (::bat_v > BAT_SETPOINT_5)
         this->RunApp();
+      if (::bat_v < BAT_SETPOINT_2)
+        this->ShutDown();
       break;
     default:
       break;
@@ -326,6 +334,8 @@ Adsl::Tick1024()
 void 
 Adsl::KillApp()
   {
+  if (Serial)
+    Serial.println("Adsl::KillApp()");
   digitalWrite(P0APP, HIGH);
   this->state = ProcessorState::IDLE;
   }
@@ -334,6 +344,8 @@ Adsl::KillApp()
 void
 Adsl::RunApp()
   {
+  if (Serial)
+    Serial.println("Adsl::RunApp()");
   digitalWrite(P0APP, LOW);
   this->state = ProcessorState::RUNNING;
   }
@@ -342,7 +354,11 @@ Adsl::RunApp()
 void
 Adsl::PowerOff()
   {
-  digitalWrite(K2, HIGH);
+  if (Serial)
+    Serial.println("Adsl::PowerOff()");
+  digitalWrite(K2,    HIGH);
+  digitalWrite(P0UP,  HIGH);
+  digitalWrite(P0APP, HIGH);
   this->state = ProcessorState::POWER_OFF;
   }
 
@@ -351,15 +367,20 @@ void
 Adsl::PowerOn()
   {
   this->KillApp();
-  digitalWrite(P0UP, LOW);
+  if (Serial)
+    Serial.println("Adsl::PowerOn()");
+  digitalWrite(P0UP,  LOW);
   digitalWrite(P0APP, HIGH);
-  digitalWrite(K2, LOW);
+  digitalWrite(K2,    LOW);
   }
 
 //------------------------------------------------------------------------------
 void
 Adsl::ShutDown()
   {
+  if (Serial)
+    Serial.println("Adsl::ShutDown()");
+  this->KillApp();
   digitalWrite(P0UP, HIGH);
   this->state = ProcessorState::SHUTTINGDOWN;
   }
@@ -369,7 +390,6 @@ Flarm::Flarm()
   : Processor()
   {
   pinMode(K3,    OUTPUT);
-  pinMode(K4,    OUTPUT);
   pinMode(P1UP,  OUTPUT);
   pinMode(P1APP, OUTPUT);
   this->PowerOff();
@@ -378,6 +398,14 @@ Flarm::Flarm()
 //------------------------------------------------------------------------------
 Flarm::~Flarm()
   {
+  this->PowerOff();
+  }
+
+//------------------------------------------------------------------------------
+void
+Flarm::Tick64()
+  {
+  Processor::Tick64();
   }
 
 //------------------------------------------------------------------------------
@@ -389,7 +417,9 @@ Flarm::Tick1024()
   switch (this->state)
     {
     case ProcessorState::POWER_OFF:
-      if ((::panel_state == PanelState::DAY) && (::bat_v > BAT_SETPOINT_6))
+      if ((::panel_state == PanelState::DAY) &&
+          (::bat_v > BAT_SETPOINT_6)         &&
+          (::flarm_allow == true))
         this->PowerOn();
       break;
     case ProcessorState::DOWN:
@@ -420,6 +450,8 @@ Flarm::Tick1024()
         {
         if (::bat_v > BAT_SETPOINT_6)
           this->RunApp();
+        if (::bat_v < BAT_SETPOINT_4)
+          this->ShutDown();
         }
       break;
     default:
@@ -431,6 +463,8 @@ Flarm::Tick1024()
 void
 Flarm::KillApp()
   {
+  if (Serial)
+    Serial.println("Flarm::KillApp()");
   digitalWrite(P1APP, HIGH);
   this->state = ProcessorState::IDLE;
   }
@@ -439,6 +473,8 @@ Flarm::KillApp()
 void
 Flarm::RunApp()
   {
+  if (Serial)
+    Serial.println("Flarm::RunApp()");
   digitalWrite(P1APP, LOW);
   this->state = ProcessorState::RUNNING;
   }
@@ -447,8 +483,11 @@ Flarm::RunApp()
 void
 Flarm::PowerOff()
   {
-  digitalWrite(K4, HIGH);
-  digitalWrite(K3, HIGH);
+  if (Serial)
+    Serial.println("Flarm::PowerOff()");
+  digitalWrite(K3,    HIGH);
+  digitalWrite(P1UP,  HIGH);
+  digitalWrite(P1APP, HIGH);
   this->state = ProcessorState::POWER_OFF;
   }
 
@@ -456,16 +495,21 @@ Flarm::PowerOff()
 void
 Flarm::PowerOn()
   {
+  if (Serial)
+    Serial.println("Flarm::PowerOn()");
   this->KillApp();
-  digitalWrite(P1UP, LOW);
+  digitalWrite(P1UP,  LOW);
   digitalWrite(P1APP, HIGH);
-  digitalWrite(K3, LOW);
+  digitalWrite(K3,    LOW);
   }
 
 //------------------------------------------------------------------------------
 void
 Flarm::ShutDown()
   {
+  if (Serial)
+    Serial.println("Flarm::ShutDown()");
+  this->KillApp();
   digitalWrite(P1UP, HIGH);
   this->state = ProcessorState::SHUTTINGDOWN;
   }
@@ -474,6 +518,7 @@ Flarm::ShutDown()
 Arduino::Arduino()
   : Processor()
   {
+  pinMode(K1, OUTPUT);
   this->PowerOn();
   ::bat_acc = ::pan_acc = 0;
   ::nreadings = 0;
@@ -483,6 +528,7 @@ Arduino::Arduino()
 //------------------------------------------------------------------------------
 Arduino::~Arduino()
   {
+  this->PowerOff();
   }
 
 //------------------------------------------------------------------------------
@@ -527,6 +573,7 @@ Arduino::Tick32()
 void
 Arduino::Tick64()
   {
+  Processor::Tick64();
   ::bat_acc += analogRead(5);
   ::pan_acc += analogRead(4);
   ::nreadings++;
@@ -544,20 +591,34 @@ Arduino::Tick1024()
   if (Serial)
     {
     Serial.print("B: ");
-    Serial.println(::bat_v, DEC);
+    Serial.print(::bat_v, DEC);
+    Serial.print(" (");
+    Serial.print(float(::bat_v) / 1023 * 5 * (47 + 22) / 22, 2);
+    Serial.print("V), ");
     Serial.print("P: ");
-    Serial.println(::pan_v, DEC);
+    Serial.print(::pan_v, DEC);
+    Serial.print(" (");
+    Serial.print(float(::pan_v) / 1023 * 5 * (47 + 12) / 12, 2);
+    Serial.print("V), ");
+    Serial.print("I: ");
+    Serial.print((::flarm_received == true) ? "true" : "false");
+    Serial.print(", F: ");
+    Serial.print((::flarm_allow == true) ? "true" : "false");
+    Serial.println();
     }
+  ::flarm_received = false;
+
+  if ((::bat_v > BAT_SETPOINT_1) && (this->state == ProcessorState::POWER_OFF))
+    this->PowerOn();    // Tautology
 
   if (::bat_v < BAT_SETPOINT_1)
     {
     if (Serial)
       Serial.println("2: DEAD FLAT");
     digitalWrite(K4, HIGH);
-    digitalWrite(K3, HIGH); // This will certainly already be DOWN.
-    digitalWrite(K2, HIGH); // Likewise, this.
-    digitalWrite(K1, HIGH); // This kills everything including the
-                            // processor on which this program runs.
+    digitalWrite(K3, HIGH);
+    digitalWrite(K2, HIGH);
+    this->PowerOff();
     Serial.println("0, 1, 2: POWER OFF"); // Only get here of powered
                                           // by serial.
     }
@@ -587,6 +648,8 @@ Arduino::Tick1024()
 void
 Arduino::PowerOff()
   {
+  if (Serial)
+    Serial.println("Arduino::PowerOff()");
   digitalWrite(K1, HIGH);
   this->state = ProcessorState::POWER_OFF;
   }
@@ -595,6 +658,8 @@ Arduino::PowerOff()
 void
 Arduino::PowerOn()
   {
+  if (Serial)
+    Serial.println("Arduino::PowerOn()");
   digitalWrite(K1, LOW);
   this->state = ProcessorState::RUNNING;
   }
@@ -603,5 +668,83 @@ Arduino::PowerOn()
 void
 Arduino::ShutDown()
   {
+  if (Serial)
+    Serial.println("Arduino::ShutDown()");
+  this->state = ProcessorState::SHUTTINGDOWN;
+  }
+
+//------------------------------------------------------------------------------
+Switch::Switch()
+  {
+  pinMode(K4, OUTPUT);
+  this->PowerOff();
+  }
+
+//------------------------------------------------------------------------------
+Switch::~Switch()
+  {
+  this->PowerOff();
+  }
+
+//------------------------------------------------------------------------------
+void
+Switch::Tick64()
+  {
+  Processor::Tick64();
+  }
+
+//------------------------------------------------------------------------------
+void
+Switch::Tick1024()
+  {
+  Processor::Tick1024();
+
+  switch(this->state)
+    {
+
+    case ProcessorState::POWER_OFF:
+      if ((::panel_state == PanelState::DAY) &&
+          (::bat_v > BAT_SETPOINT_6)         &&
+          (::flarm_allow == true))
+        this->PowerOn();
+      break;
+    case ProcessorState::RUNNING:
+      if (::panel_state == PanelState::NIGHT)
+        this->ShutDown();
+      else
+        if (::bat_v < BAT_SETPOINT_4)
+          this->ShutDown();
+      break;
+    default:
+      break;
+    }
+  }
+
+//------------------------------------------------------------------------------
+void
+Switch::PowerOff()
+  {
+  if (Serial)
+    Serial.println("Switch::PowerOff()");
+  digitalWrite(K4, HIGH);
+  this->state = ProcessorState::POWER_OFF;
+  }
+
+//------------------------------------------------------------------------------
+void
+Switch::PowerOn()
+  {
+  if (Serial)
+    Serial.println("Switch::PowerOn()");
+  digitalWrite(K4, LOW);
+  this->state = ProcessorState::RUNNING;
+  }
+
+//------------------------------------------------------------------------------
+void
+Switch::ShutDown()
+  {
+  if (Serial)
+    Serial.println("Switch::ShutDown()");
   this->state = ProcessorState::SHUTTINGDOWN;
   }
