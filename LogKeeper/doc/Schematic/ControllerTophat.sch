@@ -234,19 +234,19 @@ T 42600 45500 5 10 0 0 0 0 1
 device=CONNECTOR_6
 T 40900 45700 5 10 1 1 0 0 1
 refdes=J3
-T 40400 45300 5 10 1 1 0 0 1
-pinlabel=K1
-T 40400 45000 5 10 1 1 0 0 1
-pinlabel=K2
-T 40400 44700 5 10 1 1 0 0 1
-pinlabel=K3
 T 40400 44400 5 10 1 1 0 0 1
+pinlabel=K1
+T 40400 44700 5 10 1 1 0 0 1
+pinlabel=K2
+T 40400 45000 5 10 1 1 0 0 1
+pinlabel=K3
+T 40400 45300 5 10 1 1 0 0 1
 pinlabel=K4
-T 40400 44100 5 10 1 1 0 0 1
-pinlabel=+5V
 T 40400 43800 5 10 1 1 0 0 1
+pinlabel=+5V
+T 40400 44100 5 10 1 1 0 0 1
 pinlabel=GND
-T 40800 45500 5 10 1 1 0 0 1
+T 40800 43700 5 10 1 1 0 0 1
 pinseq=o
 }
 C 40800 41600 1 0 0 connector4-1.sym
