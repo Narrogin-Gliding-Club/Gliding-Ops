@@ -31,10 +31,10 @@ Copyright_License {
 #include <WSWire.h>
 
 #define LED_BUILTIN    13
-#define K1             12
-#define K2             11
-#define K3             10
-#define K4              9
+#define K1              9
+#define K2             10
+#define K3             11
+#define K4             12
 #define P0UP            6
 #define P0APP           7
 #define P1UP            4
