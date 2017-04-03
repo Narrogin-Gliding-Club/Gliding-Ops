@@ -31,10 +31,10 @@ Copyright_License {
 #include <WSWire.h>
 
 #define LED_BUILTIN    13
-#define K1             12
-#define K2             11
-#define K3             10
-#define K4              9
+#define K1              9
+#define K2             10
+#define K3             11
+#define K4             12
 #define P0UP            6
 #define P0APP           7
 #define P1UP            4
@@ -44,6 +44,8 @@ Copyright_License {
 #define I2C_FLARM_ADDR 65
 #define ADSL            0
 #define FLARM           1
+#define ON              HIGH  // Relay activated
+#define OFF             LOW   // Relay deactivated
 
 #define BAT_SETPOINT_1 uint16_t(718)  // 11.0V
 #define BAT_SETPOINT_2 uint16_t(750)  // 11.5V
@@ -356,9 +358,9 @@ Adsl::PowerOff()
   {
   if (Serial)
     Serial.println("Adsl::PowerOff()");
-  digitalWrite(K2,    HIGH);
-  digitalWrite(P0UP,  HIGH);
-  digitalWrite(P0APP, HIGH);
+  digitalWrite(K2,    OFF);
+  digitalWrite(P0UP,  OFF);
+  digitalWrite(P0APP, OFF);
   this->state = ProcessorState::POWER_OFF;
   }
 
@@ -371,7 +373,7 @@ Adsl::PowerOn()
     Serial.println("Adsl::PowerOn()");
   digitalWrite(P0UP,  LOW);
   digitalWrite(P0APP, HIGH);
-  digitalWrite(K2,    LOW);
+  digitalWrite(K2,    ON);
   }
 
 //------------------------------------------------------------------------------
@@ -485,7 +487,7 @@ Flarm::PowerOff()
   {
   if (Serial)
     Serial.println("Flarm::PowerOff()");
-  digitalWrite(K3,    HIGH);
+  digitalWrite(K3,    OFF);
   digitalWrite(P1UP,  HIGH);
   digitalWrite(P1APP, HIGH);
   this->state = ProcessorState::POWER_OFF;
@@ -500,7 +502,7 @@ Flarm::PowerOn()
   this->KillApp();
   digitalWrite(P1UP,  LOW);
   digitalWrite(P1APP, HIGH);
-  digitalWrite(K3,    LOW);
+  digitalWrite(K3,    ON);
   }
 
 //------------------------------------------------------------------------------
@@ -615,9 +617,9 @@ Arduino::Tick1024()
     {
     if (Serial)
       Serial.println("2: DEAD FLAT");
-    digitalWrite(K4, HIGH);
-    digitalWrite(K3, HIGH);
-    digitalWrite(K2, HIGH);
+    digitalWrite(K4, OFF);
+    digitalWrite(K3, OFF);
+    digitalWrite(K2, OFF);
     this->PowerOff();
     Serial.println("0, 1, 2: POWER OFF"); // Only get here of powered
                                           // by serial.
@@ -650,7 +652,7 @@ Arduino::PowerOff()
   {
   if (Serial)
     Serial.println("Arduino::PowerOff()");
-  digitalWrite(K1, HIGH);
+  digitalWrite(K1, OFF);
   this->state = ProcessorState::POWER_OFF;
   }
 
@@ -660,7 +662,7 @@ Arduino::PowerOn()
   {
   if (Serial)
     Serial.println("Arduino::PowerOn()");
-  digitalWrite(K1, LOW);
+  digitalWrite(K1, ON);
   this->state = ProcessorState::RUNNING;
   }
 
@@ -726,7 +728,7 @@ Switch::PowerOff()
   {
   if (Serial)
     Serial.println("Switch::PowerOff()");
-  digitalWrite(K4, HIGH);
+  digitalWrite(K4, OFF);
   this->state = ProcessorState::POWER_OFF;
   }
 
@@ -736,7 +738,7 @@ Switch::PowerOn()
   {
   if (Serial)
     Serial.println("Switch::PowerOn()");
-  digitalWrite(K4, LOW);
+  digitalWrite(K4, ON);
   this->state = ProcessorState::RUNNING;
   }
 
