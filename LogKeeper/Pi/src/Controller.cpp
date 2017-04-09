@@ -1,0 +1,71 @@
+/*
+Copyright_License {
+
+  Glider Operations.
+  Copyright (C) 2013-2017 Peter F Bradshaw
+  A detailed list of copyright holders can be found in the file "AUTHORS".
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+}
+*/
+
+#include "Controller.hpp"
+#include <boost/asio.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/bind.hpp>
+#include <iostream>
+
+void arduinoPoll(const boost::system::error_code &,
+                 boost::asio::deadline_timer *);
+//------------------------------------------------------------------------------
+void
+arduinoPoll(const boost::system::error_code &e,
+            boost::asio::deadline_timer *t)
+  {
+  std::cout << "Poll: " << e << std::endl;
+  if (e == boost::asio::error::operation_aborted)
+    std::cout << "Aborted" << std::endl;
+  t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
+  t->async_wait(boost::bind(arduinoPoll,
+                            boost::asio::placeholders::error,
+                            t)
+               );
+  }
+
+//------------------------------------------------------------------------------
+int
+main(int argc, const char *argv[])
+  {
+  boost::asio::io_service actor;
+
+  boost::asio::deadline_timer timer(actor, boost::posix_time::seconds(1));
+  timer.async_wait(boost::bind(arduinoPoll,
+                               boost::asio::placeholders::error,
+                               &timer)
+                  );
+
+  actor.run();
+
+  return 0;
+  }
+
+//------------------------------------------------------------------------------
+/*
+ * This is necessary for the boot lib.
+ */
+void
+boost::throw_exception(std::exception const &)
+  {
+  }

@@ -1,18 +1,18 @@
 [submodule "LogKeeper/src/lib/i2cdevlib"]
-	path = LogKeeper/src/lib/i2cdevlib
+	path = LogKeeper/Arduino/lib/i2cdevlib
 	url = https://github.com/jrowberg/i2cdevlib.git
 [submodule "LogKeeper/src/lib/MsTimer2"]
-	path = LogKeeper/src/lib/MsTimer2
+	path = LogKeeper/Arduino/lib/MsTimer2
 	url = https://github.com/PaulStoffregen/MsTimer2.git
 [submodule "LogKeeper/src/lib/Low-Power"]
-	path = LogKeeper/src/lib/Low-Power
+	path = LogKeeper/Arduino/lib/Low-Power
 	url = https://github.com/rocketscream/Low-Power.git
 [submodule "LogKeeper/src/lib/WSWireLib"]
-	path = LogKeeper/src/lib/WSWireLib
+	path = LogKeeper/Arduino/lib/WSWireLib
 	url = https://github.com/steamfire/WSWireLib.git
 [submodule "lib/boost"]
 	path = lib/boost
 	url = git@github.com:Exadios/boost.git
 [submodule "LogKeeper/src/lib/boost"]
-	path = LogKeeper/src/lib/boost
+	path = LogKeeper/Pi/lib/boost
 	url = git@github.com:Exadios/boost.git
