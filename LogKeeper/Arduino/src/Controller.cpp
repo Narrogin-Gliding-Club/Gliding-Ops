@@ -98,7 +98,7 @@ setup()
   digitalWrite(SCL, 0);         // Turn off i2c pullups for 3v3 Pi.
   digitalWrite(SDA, 0);
   WSWire.onReceive(i2creceive); // register receive event
-  ::tick           = 0;
+  ::tick           = -1023;     // Allow some voltage readings before action.
   ::nreadings      = 0;
   ::flarm_allow    = false;
   ::flarm_received = false;
