@@ -16,3 +16,6 @@
 [submodule "LogKeeper/src/lib/boost"]
 	path = LogKeeper/Pi/lib/boost
 	url = git@github.com:Exadios/boost.git
+[submodule "LogKeeper/Pi/lib/wiringPi"]
+	path = LogKeeper/Pi/lib/wiringPi
+	url = git://git.drogon.net/wiringPi
