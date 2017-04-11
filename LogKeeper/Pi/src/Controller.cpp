@@ -26,18 +26,45 @@ Copyright_License {
 #include <boost/asio/error.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+
+#ifdef PI
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+#else
+#define LOW 0
+#define HIGH 1
+#endif
+
+ProgramState   program_state   = ProgramState::DOWN;
+ProcessorState processor_state = ProcessorState::UP;
 
 void arduinoPoll(const boost::system::error_code &,
                  boost::asio::deadline_timer *);
+void initIo();
+void executeStatus(const boost::system::error_code &e,
+                   boost::asio::deadline_timer *);
+void shutdownProgram();
+void runupProgram();
+void shutdownProcessor();
+void checkIfProgramDown();
+int readPin(int pin);
+
 //------------------------------------------------------------------------------
 void
 arduinoPoll(const boost::system::error_code &e,
             boost::asio::deadline_timer *t)
   {
-  std::cout << "Poll: " << e << std::endl;
   if (e == boost::asio::error::operation_aborted)
-    std::cout << "Aborted" << std::endl;
-  t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
+    {
+#ifdef PC
+    std::cout << "Poll() : abort" << std::endl;
+#endif
+    return;
+    }
+  std::cout << "Poll()" << std::endl;
+  t->expires_at(t->expires_at() + boost::posix_time::seconds(5));
   t->async_wait(boost::bind(arduinoPoll,
                             boost::asio::placeholders::error,
                             t)
@@ -45,16 +72,190 @@ arduinoPoll(const boost::system::error_code &e,
   }
 
 //------------------------------------------------------------------------------
+void
+initIo()
+  {
+#ifdef PI
+  wiringPiSetup();
+  pinMode(0, INPUT);
+  pinMode(1, INPUT);
+  pullUpDnControl(0, PUD_UP);
+  pullUpDnControl(1, PUD_UP);
+#else
+  std::cout << "initIo()" << std::endl;
+#endif  // PI
+  }
+
+//------------------------------------------------------------------------------
+void
+executeStatus(const boost::system::error_code &e,
+              boost::asio::deadline_timer *t)
+  {
+  if (readPin(0) == HIGH)
+    {
+    switch (program_state)
+      {
+      case ProgramState::UP:
+        shutdownProgram();
+        break;
+      case ProgramState::SHUTTINGDOWN:
+      default:
+        break;
+      case ProgramState::DOWN:
+        {
+        switch (processor_state)
+          {
+          case ProcessorState::UP:
+            shutdownProcessor();
+            break;
+          default:
+            break;
+          }
+        }
+      }
+    }
+  if (readPin(1) == HIGH)
+    {
+    switch (program_state)
+      {
+      case ProgramState::UP:
+        shutdownProgram();
+        break;
+      case ProgramState::SHUTTINGDOWN:
+      case ProgramState::DOWN:
+      default:
+        break;
+      }
+    }
+  else
+    {
+    switch (program_state)
+      {
+      case ProgramState::UP:
+      case ProgramState::SHUTTINGDOWN:  // If SHUTTINGDOWN let it proceed to DOWN.
+        break;
+      case ProgramState::DOWN:
+        runupProgram();
+        break;
+      }
+    }
+  if (program_state == ProgramState::SHUTTINGDOWN)
+    checkIfProgramDown();
+
+  t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
+  t->async_wait(boost::bind(arduinoPoll,
+                            boost::asio::placeholders::error,
+                            t)
+               );
+
+  }
+
+//------------------------------------------------------------------------------
+#ifdef PI
+void
+shutdownProgram()
+  {
+  system("/etc/init.d/program stop");
+  ::program_state = ProgramState::SHUTTINGDOWN;
+  }
+#else
+void
+shutdownProgram()
+  {
+  std::cout << "/etc/init.d/program stop" << std::endl;
+  ::program_state = ProgramState::SHUTTINGDOWN;
+  }
+#endif  // PI
+
+//------------------------------------------------------------------------------
+#ifdef PI
+void
+runupProgram()
+  {
+  system("/etc/init.d/program start");
+  ::program_state = ProgramState::UP;
+  }
+#else // PI
+void
+runupProgram()
+  {
+  std::cout << "/etc/init.d/program start" << std::endl;
+  ::program_state = ProgramState::UP;
+  }
+#endif  // PI
+
+//------------------------------------------------------------------------------
+#ifdef PI
+void
+shutdownProcessor()
+  {
+  system("/sbin/poweroff");
+  ::processor_state = ProcessorState::SHUTTINGDOWN;
+  }
+#else // PI
+void
+shutdownProcessor()
+  {
+  std::cout << "/sbin/poweroff" << std::endl;
+  ::processor_state = ProcessorState::SHUTTINGDOWN;
+  }
+#endif  // PI
+
+//------------------------------------------------------------------------------
+#ifdef PI
+void
+checkIfProgramDown()
+  {
+  if (system("/etc/init.d/program status") == 3)
+    ::program_state = ProgramState::DOWN;
+  }
+#else // PI
+void
+checkIfProgramDown()
+  {
+  int is;
+  std::cout << "/etc/init.d/program status ? : ";
+  std::cin >> is;
+  if (is == 3)
+    ::program_state = ProgramState::DOWN;
+  }
+#endif  // PI
+
+//------------------------------------------------------------------------------
+#ifdef PI
+int
+readPin(int pin)
+  {
+  return digitalRead(pin);
+  }
+#else // PI
+int
+readPin(int pin)
+  {
+  int is;
+  std::cout << "GPIO " << pin << " ? : ";
+  std::cin >> is;
+  return (is == 0) ? LOW : HIGH;
+  }
+#endif  // PI
+
+//------------------------------------------------------------------------------
 int
 main(int argc, const char *argv[])
   {
+  initIo();
   boost::asio::io_service actor;
 
-  boost::asio::deadline_timer timer(actor, boost::posix_time::seconds(1));
-  timer.async_wait(boost::bind(arduinoPoll,
-                               boost::asio::placeholders::error,
-                               &timer)
-                  );
+  boost::asio::deadline_timer i2ctimer(actor, boost::posix_time::seconds(1));
+  i2ctimer.async_wait(boost::bind(arduinoPoll,
+                                  boost::asio::placeholders::error,
+                                  &i2ctimer)
+                     );
+  boost::asio::deadline_timer polltimer(actor, boost::posix_time::seconds(1));
+  polltimer.async_wait(boost::bind(executeStatus,
+                                   boost::asio::placeholders::error,
+                                   &polltimer)
+                      );
 
   actor.run();
 

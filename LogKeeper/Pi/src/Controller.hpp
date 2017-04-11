@@ -31,4 +31,17 @@
 #ifndef _CONTROLLER_HPP_
 #define _CONTROLLER_HPP_
 
+enum class ProgramState
+  {
+  DOWN,
+  SHUTTINGDOWN,
+  UP,
+  };
+
+enum class ProcessorState
+  {
+  SHUTTINGDOWN,
+  UP,
+  };
+  
 #endif  // _CONTROLLER_HPP_
