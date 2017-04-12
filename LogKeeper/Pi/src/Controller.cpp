@@ -28,6 +28,8 @@ Copyright_License {
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+#include <errno.h>
 
 #ifdef PI
 #include <wiringPi.h>
@@ -39,6 +41,7 @@ Copyright_License {
 
 ProgramState   program_state   = ProgramState::DOWN;
 ProcessorState processor_state = ProcessorState::UP;
+int i2c = -1;
 
 void arduinoPoll(const boost::system::error_code &,
                  boost::asio::deadline_timer *);
@@ -56,14 +59,39 @@ void
 arduinoPoll(const boost::system::error_code &e,
             boost::asio::deadline_timer *t)
   {
+  struct tm result;
+  time_t tl;
+#ifdef PI
+  if (e == boost::asio::error::operation_aborted)
+    return;
+
+#else // PI
   if (e == boost::asio::error::operation_aborted)
     {
-#ifdef PC
     std::cout << "Poll() : abort" << std::endl;
-#endif
     return;
     }
-  std::cout << "Poll()" << std::endl;
+#endif  // PI
+   
+   tl = time(nullptr);
+   localtime_r(&tl, &result);
+   if (result.tm_wday == 0 || result.tm_wday == 5 || result.tm_wday == 6)
+     {  // Friday, Saturday or Sunday.
+#if PI
+     wiringPiI2CWrite (i2c, 1);
+#else // PI
+     std::cout << "Flarm enable" << std::endl;
+#endif  // PI
+     }
+   else
+     {
+#ifdef PI
+     wiringPiI2CWrite(i2c, 0);
+#else // PI
+     std::cout << "Flarm disable" << std::endl;
+#endif  // PI
+     }
+
   t->expires_at(t->expires_at() + boost::posix_time::seconds(5));
   t->async_wait(boost::bind(arduinoPoll,
                             boost::asio::placeholders::error,
@@ -77,6 +105,15 @@ initIo()
   {
 #ifdef PI
   wiringPiSetup();
+  if ((::i2c = wiringPiI2CSetup(1)) == -1)
+    {
+    char buf[128];
+
+    std::cerr << strerror_r(errno, buf, sizeof(buf) / sizeof(char))
+              << std::endl;
+    exit(1);
+    }
+
   pinMode(0, INPUT);
   pinMode(1, INPUT);
   pullUpDnControl(0, PUD_UP);
