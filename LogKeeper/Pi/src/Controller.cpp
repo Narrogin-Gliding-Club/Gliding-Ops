@@ -283,7 +283,7 @@ main(int argc, const char *argv[])
   initIo();
   boost::asio::io_service actor;
 
-  boost::asio::deadline_timer i2ctimer(actor, boost::posix_time::seconds(1));
+  boost::asio::deadline_timer i2ctimer(actor, boost::posix_time::seconds(2));
   i2ctimer.async_wait(boost::bind(arduinoPoll,
                                   boost::asio::placeholders::error,
                                   &i2ctimer)
