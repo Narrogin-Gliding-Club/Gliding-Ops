@@ -26,6 +26,8 @@ Copyright_License {
 #include <boost/asio/error.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -61,17 +63,14 @@ arduinoPoll(const boost::system::error_code &e,
   {
   struct tm result;
   time_t tl;
-#ifdef PI
-  if (e == boost::asio::error::operation_aborted)
-    return;
 
-#else // PI
   if (e == boost::asio::error::operation_aborted)
     {
+#ifndef PI
     std::cout << "Poll() : abort" << std::endl;
+#endif  // PI
     return;
     }
-#endif  // PI
    
    tl = time(nullptr);
    localtime_r(&tl, &result);
@@ -80,7 +79,7 @@ arduinoPoll(const boost::system::error_code &e,
 #if PI
      wiringPiI2CWrite (i2c, 1);
 #else // PI
-     std::cout << "Flarm enable" << std::endl;
+     std::cout << "1" << std::endl;
 #endif  // PI
      }
    else
@@ -88,7 +87,7 @@ arduinoPoll(const boost::system::error_code &e,
 #ifdef PI
      wiringPiI2CWrite(i2c, 0);
 #else // PI
-     std::cout << "Flarm disable" << std::endl;
+     std::cout << "0" << std::endl;
 #endif  // PI
      }
 
@@ -118,8 +117,6 @@ initIo()
   pinMode(1, INPUT);
   pullUpDnControl(0, PUD_UP);
   pullUpDnControl(1, PUD_UP);
-#else
-  std::cout << "initIo()" << std::endl;
 #endif  // PI
   }
 
@@ -130,6 +127,7 @@ executeStatus(const boost::system::error_code &e,
   {
   if (readPin(0) == HIGH)
     {
+    std::cerr << "Pin 0 high" << std::endl;
     switch (program_state)
       {
       case ProgramState::UP:
@@ -169,7 +167,8 @@ executeStatus(const boost::system::error_code &e,
     switch (program_state)
       {
       case ProgramState::UP:
-      case ProgramState::SHUTTINGDOWN:  // If SHUTTINGDOWN let it proceed to DOWN.
+      case ProgramState::SHUTTINGDOWN:  // If SHUTTINGDOWN let it proceed
+                                        // to DOWN.
         break;
       case ProgramState::DOWN:
         runupProgram();
@@ -180,7 +179,7 @@ executeStatus(const boost::system::error_code &e,
     checkIfProgramDown();
 
   t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
-  t->async_wait(boost::bind(arduinoPoll,
+  t->async_wait(boost::bind(executeStatus,
                             boost::asio::placeholders::error,
                             t)
                );
@@ -199,7 +198,7 @@ shutdownProgram()
 void
 shutdownProgram()
   {
-  std::cout << "/etc/init.d/program stop" << std::endl;
+  std::cout << "stop" << std::endl;
   ::program_state = ProgramState::SHUTTINGDOWN;
   }
 #endif  // PI
@@ -216,7 +215,7 @@ runupProgram()
 void
 runupProgram()
   {
-  std::cout << "/etc/init.d/program start" << std::endl;
+  std::cout << "start" << std::endl;
   ::program_state = ProgramState::UP;
   }
 #endif  // PI
@@ -251,7 +250,7 @@ void
 checkIfProgramDown()
   {
   int is;
-  std::cout << "/etc/init.d/program status ? : ";
+  std::cout << "status" << std::endl;
   std::cin >> is;
   if (is == 3)
     ::program_state = ProgramState::DOWN;
@@ -263,16 +262,17 @@ checkIfProgramDown()
 int
 readPin(int pin)
   {
-  return digitalRead(pin);
+  return (digitalRead(pin) == 0) ? LOW : HIGH;
   }
 #else // PI
 int
 readPin(int pin)
   {
-  int is;
-  std::cout << "GPIO " << pin << " ? : ";
+  std::string is;
+  std::cout << pin << std::flush << std::endl;
   std::cin >> is;
-  return (is == 0) ? LOW : HIGH;
+  std::cerr << "Pin(" << pin << ") = " << is << std::flush << std::endl;
+  return (is == "False\n") ? HIGH : LOW;  // Negative logic
   }
 #endif  // PI
 
