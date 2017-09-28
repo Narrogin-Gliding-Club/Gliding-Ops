@@ -35,11 +35,13 @@ Copyright_License {
 #define K2             10
 #define K3             11
 #define K4             12
+#define S2              1   // Manually enable FLARM
+#define S3              2   // Manually disable FLARM
 #define P0UP            6
 #define P0APP           7
 #define P1UP            4
 #define P1APP           5
-#define SHUTDOWNPIN     8
+#define S1              8   // Shutdown
 #define I2C_ADSL_ADDR  64
 #define I2C_FLARM_ADDR 65
 #define ADSL            0
@@ -88,7 +90,9 @@ setup()
   Serial.begin(uint32_t(115200));// For debug.
   pinMode(LED_BUILTIN, OUTPUT); // Pin 13 as a LED display (yellow).
   digitalWrite(LED_BUILTIN, HIGH);
-  pinMode(SHUTDOWNPIN, INPUT_PULLUP);
+  pinMode(S1, INPUT_PULLUP);
+  pinMode(S2, INPUT_PULLUP);
+  pinMode(S3, INPUT_PULLUP);
   ::arduino = new Arduino();
   ::adsl    = new Adsl();
   ::flarm   = new Flarm();
@@ -215,7 +219,7 @@ Processor::~Processor()
 void
 Processor::Tick2()
   {
-  if ((digitalRead(SHUTDOWNPIN) == LOW) &&
+  if ((digitalRead(S1) == LOW) &&
       (this->state != ProcessorState::SHUTTINGDOWN))
     { // Do not bother to debounce
     this->ShutDown();
@@ -421,7 +425,7 @@ Flarm::Tick1024()
     case ProcessorState::POWER_OFF:
       if ((::panel_state == PanelState::DAY) &&
           (::bat_v > BAT_SETPOINT_6)         &&
-          (::flarm_allow == true))
+          ((::flarm_allow == true) || (S2 == LOW)))
         this->PowerOn();
       break;
     case ProcessorState::DOWN:
@@ -525,6 +529,8 @@ Arduino::Arduino()
   ::bat_acc = ::pan_acc = 0;
   ::nreadings = 0;
   this->led_state = 0;
+  if (Serial)
+    Serial.println(VERSION);
   }
 
 //------------------------------------------------------------------------------

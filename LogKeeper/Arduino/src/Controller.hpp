@@ -33,6 +33,8 @@
 
 #include <Arduino.h>
 
+#define VERSION "V1.0"
+
 enum class BatteryState : uint8_t
   {
   DEAD_FLAT,
