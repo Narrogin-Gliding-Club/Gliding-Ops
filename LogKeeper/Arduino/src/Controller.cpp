@@ -425,7 +425,7 @@ Flarm::Tick1024()
     case ProcessorState::POWER_OFF:
       if ((::panel_state == PanelState::DAY) &&
           (::bat_v > BAT_SETPOINT_6)         &&
-          ((::flarm_allow == true) || (S2 == LOW)))
+          ((::flarm_allow == true) || (digitalRead(S2) == LOW)))
         this->PowerOn();
       break;
     case ProcessorState::DOWN:
@@ -612,6 +612,10 @@ Arduino::Tick1024()
     Serial.print((::flarm_received == true) ? "true" : "false");
     Serial.print(", F: ");
     Serial.print((::flarm_allow == true) ? "true" : "false");
+    Serial.print(", S2: ");
+    Serial.print(digitalRead(S2) == HIGH ? "OFF" : "ON");
+    Serial.print(", S3: ");
+    Serial.print(digitalRead(S3) == HIGH ? "OFF" : "ON");
     Serial.println();
     }
   ::flarm_received = false;
