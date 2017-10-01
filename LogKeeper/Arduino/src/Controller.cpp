@@ -717,7 +717,7 @@ Switch::Tick1024()
     case ProcessorState::POWER_OFF:
       if ((::panel_state == PanelState::DAY) &&
           (::bat_v > BAT_SETPOINT_6)         &&
-          (::flarm_allow == true))
+          ((::flarm_allow == true) || (digitalRead(S2) == LOW)))
         this->PowerOn();
       break;
     case ProcessorState::RUNNING:
