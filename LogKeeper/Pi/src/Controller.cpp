@@ -30,6 +30,7 @@ Copyright_License {
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 
@@ -44,6 +45,7 @@ Copyright_License {
 ProgramState   program_state   = ProgramState::DOWN;
 ProcessorState processor_state = ProcessorState::UP;
 int i2c = -1;
+Logger logger;
 
 void arduinoPoll(const boost::system::error_code &,
                  boost::asio::deadline_timer *);
@@ -57,6 +59,73 @@ void checkIfProgramDown();
 int readPin(int pin);
 
 //------------------------------------------------------------------------------
+Logger::Logger()
+  {
+#ifdef PI
+  this->lf.open("/var/log/controller");
+#endif
+  }
+
+//------------------------------------------------------------------------------
+Logger::~Logger()
+  {
+#ifdef PI
+  this->lf.close();
+#endif
+  }
+
+//------------------------------------------------------------------------------
+void
+Logger::Log(const std::string &message, const std::string &extra)
+  {
+  time_t t;
+  if (time(&t) > 0)
+#ifdef PI
+  if (this->lf)
+#endif
+    {
+    time_t t;
+
+    if (time(&t) > 0)
+      {
+      char *at;
+
+      if ((at = ctime(&t)) != NULL)
+        {
+        at[strlen(at) - 1] = 0; // Get rid of the '\n' from ctime().
+#ifdef PI
+        this->lf << *at << ": " << message << " " << extra << std::endl;
+#else
+        std::cerr << *at << ": " << message << " " << extra << std::endl;
+#endif  // PI
+        }
+      }
+    }
+  }
+
+//------------------------------------------------------------------------------
+bool
+Logger::operator()() const
+  {
+#ifdef PI
+  return this->lf;
+#else
+  return std::cerr;
+#endif  // PI
+  }
+
+//------------------------------------------------------------------------------
+bool
+Logger::Go() const
+  {
+#ifdef PI
+  return this->lf;
+#else
+  return std::cerr;
+#endif  // PI
+  }
+
+//------------------------------------------------------------------------------
 void
 arduinoPoll(const boost::system::error_code &e,
             boost::asio::deadline_timer *t)
@@ -66,9 +135,7 @@ arduinoPoll(const boost::system::error_code &e,
 
   if (e == boost::asio::error::operation_aborted)
     {
-#ifndef PI
-    std::cout << "Poll() : abort" << std::endl;
-#endif  // PI
+    ::logger.Log("Poll() : abort");
     return;
     }
    
@@ -108,8 +175,8 @@ initIo()
     {
     char buf[128];
 
-    std::cerr << strerror_r(errno, buf, sizeof(buf) / sizeof(char))
-              << std::endl;
+    ::logger.Log(strerror_r(errno, buf, sizeof(buf) / sizeof(char)));
+    ::logger.Log("Terminating");
     exit(1);
     }
 
@@ -187,55 +254,37 @@ executeStatus(const boost::system::error_code &e,
   }
 
 //------------------------------------------------------------------------------
-#ifdef PI
 void
 shutdownProgram()
   {
+  ::logger.Log("Stopping program");
+#ifdef PI
   system("/etc/init.d/program stop");
-  ::program_state = ProgramState::SHUTTINGDOWN;
-  }
-#else
-void
-shutdownProgram()
-  {
-  std::cout << "stop" << std::endl;
-  ::program_state = ProgramState::SHUTTINGDOWN;
-  }
 #endif  // PI
+  ::program_state = ProgramState::SHUTTINGDOWN;
+  }
 
 //------------------------------------------------------------------------------
-#ifdef PI
 void
 runupProgram()
   {
+  ::logger.Log("Starting program");
+#ifdef PI
   system("/etc/init.d/program start");
-  ::program_state = ProgramState::UP;
-  }
-#else // PI
-void
-runupProgram()
-  {
-  std::cout << "start" << std::endl;
-  ::program_state = ProgramState::UP;
-  }
 #endif  // PI
+  ::program_state = ProgramState::UP;
+  }
 
 //------------------------------------------------------------------------------
+void
+shutdownProcessor()
+  {
+  ::logger.Log("Power off");
 #ifdef PI
-void
-shutdownProcessor()
-  {
   system("/sbin/poweroff");
-  ::processor_state = ProcessorState::SHUTTINGDOWN;
-  }
-#else // PI
-void
-shutdownProcessor()
-  {
-  std::cout << "/sbin/poweroff" << std::endl;
-  ::processor_state = ProcessorState::SHUTTINGDOWN;
-  }
 #endif  // PI
+  ::processor_state = ProcessorState::SHUTTINGDOWN;
+  }
 
 //------------------------------------------------------------------------------
 #ifdef PI
@@ -280,28 +329,46 @@ readPin(int pin)
 int
 main(int argc, const char *argv[])
   {
-  initIo();
-  boost::asio::io_service actor;
+  if (!::logger.Go())
+    {
+    std::cerr << "Could not open log!" << std::endl;
+    std::exit(1);
+    }
 
-  boost::asio::deadline_timer i2ctimer(actor, boost::posix_time::seconds(2));
-  i2ctimer.async_wait(boost::bind(arduinoPoll,
-                                  boost::asio::placeholders::error,
-                                  &i2ctimer)
-                     );
-  boost::asio::deadline_timer polltimer(actor, boost::posix_time::seconds(1));
-  polltimer.async_wait(boost::bind(executeStatus,
-                                   boost::asio::placeholders::error,
-                                   &polltimer)
-                      );
+#ifdef PI
+  if (daemon(0, 0) == 0)
+#endif  // PI
+    {
+    initIo();
+    boost::asio::io_service actor;
 
-  actor.run();
+    boost::asio::deadline_timer i2ctimer(actor, boost::posix_time::seconds(2));
+    i2ctimer.async_wait(boost::bind(arduinoPoll,
+                                    boost::asio::placeholders::error,
+                                    &i2ctimer)
+                       );
+    boost::asio::deadline_timer polltimer(actor, boost::posix_time::seconds(1));
+    polltimer.async_wait(boost::bind(executeStatus,
+                                     boost::asio::placeholders::error,
+                                     &polltimer)
+                        );
 
-  return 0;
+    actor.run();
+
+    return 0;
+    }
+#ifdef PI
+  else
+    {
+    std::cerr << "Could not make daemon" << std::endl;
+    std::exit(1);
+    }
+#endif  // PI
   }
 
 //------------------------------------------------------------------------------
 /*
- * This is necessary for the boot lib.
+ * This is necessary for the boost lib.
  */
 void
 boost::throw_exception(std::exception const &)

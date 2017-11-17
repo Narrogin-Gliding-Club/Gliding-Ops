@@ -31,6 +31,9 @@
 #ifndef _CONTROLLER_HPP_
 #define _CONTROLLER_HPP_
 
+#include <string>
+#include <fstream>
+
 enum class ProgramState
   {
   DOWN,
@@ -44,4 +47,29 @@ enum class ProcessorState
   UP,
   };
   
+/**
+ * A very simple logger.
+ */
+class Logger
+  {
+public:
+  /**
+   * Ctor.
+   */
+  Logger();
+
+  /**
+   * Dtor.
+   */
+  ~Logger();
+  
+  void Log(const std::string &message, const std::string &extra = "");
+
+  bool operator()() const;
+
+  bool Go() const;
+
+private:
+  std::ofstream lf;
+  };
 #endif  // _CONTROLLER_HPP_
