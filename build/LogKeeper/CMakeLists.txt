@@ -1,2 +1,3 @@
 
-add_subdirectory(src)
+add_subdirectory(Arduino)
+add_subdirectory(Pi)
