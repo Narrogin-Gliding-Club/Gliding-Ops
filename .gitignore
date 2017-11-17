@@ -15,4 +15,5 @@ CMakeFiles/
 *.swp
 *.save
 *.tmp
+*.sch#
 nongit/
