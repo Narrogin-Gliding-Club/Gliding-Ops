@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+  echo "$0 <curl routine>"
+fi
+
+while [ true ]
+do
+  ./${1} 2> /dev/null | python3 read-kiss-json.py 
+  sleep 1
+done

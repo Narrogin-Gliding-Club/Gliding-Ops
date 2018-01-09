@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl "http://ktrax.kisstech.ch/cgi-bin/ktrax.cgi?db=aviation&sw_lat=-24&sw_lon=17.5&ne_lat=-22.5&ne_lon=19.5"
