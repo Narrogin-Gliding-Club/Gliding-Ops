@@ -108,9 +108,9 @@ bool
 Logger::operator()() const
   {
 #ifdef PI
-  return this->lf;
+  return this->lf.good();
 #else
-  return std::cerr;
+  return std::cerr.good();
 #endif  // PI
   }
 
@@ -119,9 +119,9 @@ bool
 Logger::Go() const
   {
 #ifdef PI
-  return this->lf;
+  return this->lf.good();
 #else
-  return std::cerr;
+  return std::cerr.good();
 #endif  // PI
   }
 
