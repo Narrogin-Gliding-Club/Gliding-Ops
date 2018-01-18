@@ -1,0 +1,95 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 5 (0x5)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=AU, ST=WA, L=Narrogin, O=NGC, CN=NGC CA/name=EasyRSA/emailAddress=pfb@exadios.com
+        Validity
+            Not Before: Jul  8 14:38:56 2017 GMT
+            Not After : Jul  6 14:38:56 2027 GMT
+        Subject: C=AU, ST=WA, L=YNRG, O=NGC, OU=Adsl, CN=adsl/name=adsl/emailAddress=pfb@exadios.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:cb:ec:66:6e:d4:1d:13:f9:f4:7b:13:4d:3f:ff:
+                    9b:1b:3f:a1:da:9c:3f:ea:68:3a:76:62:c0:68:c1:
+                    56:cd:a2:75:65:a3:4b:ea:0a:8f:32:02:00:5c:dc:
+                    78:3d:76:4a:65:6a:b5:da:1a:6b:59:ea:2d:f5:0b:
+                    2c:26:96:9f:5d:b1:09:93:4e:6a:66:bf:28:ce:23:
+                    92:53:b9:85:1e:41:fd:16:f9:3c:36:26:1b:b3:bd:
+                    57:12:38:c3:90:b2:94:6f:0b:4e:44:00:60:fb:9d:
+                    2d:13:eb:ac:99:37:80:d0:41:ea:2d:42:40:5e:67:
+                    d8:a2:e4:54:31:ea:86:6f:b1:10:25:1a:26:57:c6:
+                    1a:66:50:25:54:3a:82:72:6c:8a:db:97:e6:42:5a:
+                    e9:e3:d9:f0:3e:c2:0b:ee:c0:8e:c1:f3:7d:b4:23:
+                    e0:55:d8:fe:57:3a:35:eb:ef:71:d4:42:f5:7d:8b:
+                    1e:6b:1f:70:3f:f5:c8:d9:fc:de:66:68:e4:6a:68:
+                    41:3e:bb:78:e3:c6:1a:45:13:ca:7c:e0:dd:a7:bd:
+                    de:17:ee:ae:4a:80:9d:2f:da:54:84:7f:15:99:83:
+                    a2:3d:e9:59:3c:46:e2:73:b7:3b:24:3c:4b:29:73:
+                    fe:bc:30:58:79:7e:2d:bd:37:5f:a7:b3:7f:89:d6:
+                    6f:c3
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                Easy-RSA Generated Certificate
+            X509v3 Subject Key Identifier: 
+                C1:EC:D8:9B:D0:5D:BF:1B:3B:88:11:13:21:8C:1D:4D:B0:ED:F4:7E
+            X509v3 Authority Key Identifier: 
+                keyid:CE:29:21:26:DE:E3:85:F8:5E:41:DB:48:E9:F9:04:7E:2C:19:1E:C0
+                DirName:/C=AU/ST=WA/L=Narrogin/O=NGC/CN=NGC CA/name=EasyRSA/emailAddress=pfb@exadios.com
+                serial:C8:DA:09:08:F2:01:92:E8
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Key Usage: 
+                Digital Signature
+            X509v3 Subject Alternative Name: 
+                DNS:adsl
+    Signature Algorithm: sha256WithRSAEncryption
+         9d:73:73:38:6d:bf:e6:eb:f5:6f:c6:22:57:6b:dc:e1:d1:44:
+         02:11:3d:00:be:c8:0b:5f:f1:66:de:38:1c:28:6c:29:80:b1:
+         f8:34:a7:7b:78:89:49:ac:f9:76:fb:e9:18:95:68:7a:3f:ed:
+         f6:69:77:d4:4e:d5:25:e9:81:18:81:7c:62:0f:1e:b2:e3:89:
+         b6:4a:17:f7:69:87:ed:a8:d9:34:b3:1c:77:09:00:66:13:94:
+         4f:bf:3d:48:e6:29:af:3e:61:41:e4:5a:5e:dd:8f:27:5c:e2:
+         c8:b7:7c:cb:42:c1:da:8a:0c:8d:56:55:40:a1:22:4d:d3:8a:
+         7b:90:cf:5d:f1:24:72:df:40:42:db:fd:be:79:3b:cd:f4:d7:
+         4c:d8:ca:a5:17:fa:50:1f:73:d8:99:a2:96:70:a3:55:49:ea:
+         d4:8a:87:b5:70:5a:41:ac:7b:61:df:5e:11:51:39:ca:83:ed:
+         69:b7:7a:a8:a5:9e:2e:aa:76:c9:02:6d:11:be:d4:3f:cd:73:
+         d8:20:11:49:99:fc:84:1b:0b:be:9e:e0:7d:ec:51:d5:e3:58:
+         f4:2e:6b:b6:9f:eb:68:1e:a9:63:40:c0:c7:e1:7c:af:b1:af:
+         62:7c:d6:f8:67:ec:92:d5:47:09:b3:fc:19:c0:ca:91:99:cb:
+         ce:ed:ca:30
+-----BEGIN CERTIFICATE-----
+MIIExTCCA62gAwIBAgIBBTANBgkqhkiG9w0BAQsFADB+MQswCQYDVQQGEwJBVTEL
+MAkGA1UECBMCV0ExETAPBgNVBAcTCE5hcnJvZ2luMQwwCgYDVQQKEwNOR0MxDzAN
+BgNVBAMTBk5HQyBDQTEQMA4GA1UEKRMHRWFzeVJTQTEeMBwGCSqGSIb3DQEJARYP
+cGZiQGV4YWRpb3MuY29tMB4XDTE3MDcwODE0Mzg1NloXDTI3MDcwNjE0Mzg1Nlow
+gYQxCzAJBgNVBAYTAkFVMQswCQYDVQQIEwJXQTENMAsGA1UEBxMEWU5SRzEMMAoG
+A1UEChMDTkdDMQ0wCwYDVQQLEwRBZHNsMQ0wCwYDVQQDEwRhZHNsMQ0wCwYDVQQp
+EwRhZHNsMR4wHAYJKoZIhvcNAQkBFg9wZmJAZXhhZGlvcy5jb20wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDL7GZu1B0T+fR7E00//5sbP6HanD/qaDp2
+YsBowVbNonVlo0vqCo8yAgBc3Hg9dkplarXaGmtZ6i31Cywmlp9dsQmTTmpmvyjO
+I5JTuYUeQf0W+Tw2JhuzvVcSOMOQspRvC05EAGD7nS0T66yZN4DQQeotQkBeZ9ii
+5FQx6oZvsRAlGiZXxhpmUCVUOoJybIrbl+ZCWunj2fA+wgvuwI7B8320I+BV2P5X
+OjXr73HUQvV9ix5rH3A/9cjZ/N5maORqaEE+u3jjxhpFE8p84N2nvd4X7q5KgJ0v
+2lSEfxWZg6I96Vk8RuJztzskPEspc/68MFh5fi29N1+ns3+J1m/DAgMBAAGjggFF
+MIIBQTAJBgNVHRMEAjAAMC0GCWCGSAGG+EIBDQQgFh5FYXN5LVJTQSBHZW5lcmF0
+ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFMHs2JvQXb8bO4gREyGMHU2w7fR+MIGy
+BgNVHSMEgaowgaeAFM4pISbe44X4XkHbSOn5BH4sGR7AoYGDpIGAMH4xCzAJBgNV
+BAYTAkFVMQswCQYDVQQIEwJXQTERMA8GA1UEBxMITmFycm9naW4xDDAKBgNVBAoT
+A05HQzEPMA0GA1UEAxMGTkdDIENBMRAwDgYDVQQpEwdFYXN5UlNBMR4wHAYJKoZI
+hvcNAQkBFg9wZmJAZXhhZGlvcy5jb22CCQDI2gkI8gGS6DATBgNVHSUEDDAKBggr
+BgEFBQcDAjALBgNVHQ8EBAMCB4AwDwYDVR0RBAgwBoIEYWRzbDANBgkqhkiG9w0B
+AQsFAAOCAQEAnXNzOG2/5uv1b8YiV2vc4dFEAhE9AL7IC1/xZt44HChsKYCx+DSn
+e3iJSaz5dvvpGJVoej/t9ml31E7VJemBGIF8Yg8esuOJtkoX92mH7ajZNLMcdwkA
+ZhOUT789SOYprz5hQeRaXt2PJ1ziyLd8y0LB2ooMjVZVQKEiTdOKe5DPXfEkct9A
+Qtv9vnk7zfTXTNjKpRf6UB9z2JmilnCjVUnq1IqHtXBaQax7Yd9eEVE5yoPtabd6
+qKWeLqp2yQJtEb7UP81z2CARSZn8hBsLvp7gfexR1eNY9C5rtp/raB6pY0DAx+F8
+r7GvYnzW+GfsktVHCbP8GcDKkZnLzu3KMA==
+-----END CERTIFICATE-----
