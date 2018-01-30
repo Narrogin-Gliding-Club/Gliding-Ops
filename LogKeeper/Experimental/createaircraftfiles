@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+
+flarms = open('nongit/Flarms', 'r')
+ad     = open('nongit/looper.out', 'r')
+
+for ac in flarms:
+  print(ac[0:6])
+  ad.seek(0)
+  ca = open('nongit/' + ac[0:6] + '.sort', 'w')
+
+  tlast = ''
+  for ar in ad:
+    pop = ar.partition(' ')
+    id  = pop[0]
+    res = pop[2]
+    if id.partition(':')[2][0:6] == ac[0:6]:
+      pop = res.partition(' ')
+      t   = pop[0]
+      res = pop[2]
+      if t > tlast:
+        tlast = t
+        pop = res.partition(' ')
+        age = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        lat = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        lon = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        z   = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        v   = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        trk = pop[0]
+        res = pop[2]
+        pop = res.partition(' ')
+        var = pop[0]
+#        print(id, t, lat, lon, z, trk, var)
+        ca.write(id + ' ' + t + ' ' + age + ' ' + lat + ' ' + lon + ' ' + z + ' ' + v + ' ' + trk + ' ' + var)
+
+  ca.close()
