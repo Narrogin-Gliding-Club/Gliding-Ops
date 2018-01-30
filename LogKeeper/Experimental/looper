@@ -3,6 +3,7 @@
 if [ $# -lt 1 ]
 then
   echo "$0 <curl routine>"
+  exit 255
 fi
 
 while [ true ]
