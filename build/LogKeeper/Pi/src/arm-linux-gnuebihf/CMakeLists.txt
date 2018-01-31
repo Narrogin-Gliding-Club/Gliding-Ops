@@ -1,10 +1,11 @@
 add_compile_options(-I${BOOST_DIR}/include -DBOOST_NO_EXCEPTIONS)
 add_compile_options(-I${WIRINGPI_LIB_DIR}/include)
+set(BOOST_LIB_DIR ${BOOST_DIR}/arm-linux-gnueabihf-gcc/lib)
 
 add_definitions(-DPI)
 
-add_custom_target(echoPivars
-                  COMMAND echo WIRINGPI_LIB_DIR = ${WIRINGPI_LIB_DIR}
+add_custom_target(Log-Keeper-Pi-src-arm-linux-gnuebihf
+                  COMMAND echo BOOST_LIB_DIR = ${BOOST_LIB_DIR}
                  )
 
 add_executable(controller-arm-linux-gnuebihf

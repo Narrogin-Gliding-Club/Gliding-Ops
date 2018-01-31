@@ -2,11 +2,18 @@ To install from a clean pull using 'make' (GNU make):
 
 mkdir out
 cd out
+git submodule init
+git submodule update
 cmake -G "Unix Makefiles" ..
+make libwiringPi libboost
 make
 
 To install from a clean pull using 'ninja' (Ninja):
 mkdir out
 cd out
+git submodule init
+git submodule update`
 cmake -G "Ninja" ..
+ninja libwiringPi
+ninja libboost
 ninja
