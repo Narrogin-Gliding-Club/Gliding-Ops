@@ -30,8 +30,18 @@ set(BOOST_LIBS ${BOOST_LIB_DIR}/libboost_atomic.a
                ${BOOST_LIB_DIR}/libboost_wave.a
    )
 
-add_custom_target(libboost-arm-linux-gnueabihf-gcc export PATH=${PATH}:/opt/pi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin \; export BOOST_BUILD_PATH=${Boost_BUILD} \; export BOOST_ROOT=${Boost_SRC} \; ${Boost_SRC}/b2 --prefix=${CMAKE_CURRENT_BINARY_DIR} --build-dir=${CMAKE_CURRENT_BINARY_DIR} --with-timer install
-                 WORKING_DIRECTORY ${Boost_SRC}
+add_custom_command(OUTPUT b2
+                   COMMAND ./bootstrap.sh --prefix=${CMAKE_CURRENT_BINARY_DIR}
+                   WORKING_DIRECTORY ${Boost_SRC}
+                  )
+
+add_library(boost_system STATIC IMPORTED GLOBAL)
+add_custom_target(libboost-arm-linux-gnueabihf 
+                  COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR} 2> /dev/null
+                  COMMAND cp ${Boost_BUILD}/user-config.jam ${CMAKE_CURRENT_BINARY_DIR}
+                  COMMAND export BOOST_BUILD_PATH=${CMAKE_CURRENT_BINARY_DIR} \; export BOOST_ROOT=${Boost_SRC} \; ${Boost_SRC}/b2 --build-dir=${CMAKE_CURRENT_BINARY_DIR} --debug-configuration --with-exception --with-system toolset=gcc install
+                  WORKING_DIRECTORY ${Boost_SRC}
+                  DEPENDS b2
                  )
 
 

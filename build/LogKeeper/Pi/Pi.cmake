@@ -3,11 +3,11 @@
 set(CMAKE_AR "arm-linux-gnueabihf-ar")
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
-set(CMAKE_CXX_COMPILER_WITH_PATH "/opt/pi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-g++")
+set(CMAKE_CXX_COMPILER_WITH_PATH "/usr/bin/arm-linux-gnueabihf-g++")
 #set(CMAKE_CXX_FLAGS
 #    "-Wall -fno-exceptions -ffunction-sections -fdata-sections -std=gnu++11 -MMD -I./ -I${CMAKE_CURRENT_BINARY_DIR}/include ")
 set(CMAKE_C_COMPILER "arm-linux-gnueabihf-gcc")
-set(CMAKE_C_COMPILER_WITH_PATH "/opt/pi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-g++")
+set(CMAKE_C_COMPILER_WITH_PATH "/usr/bin/arm-linux-gnueabihf-gcc")
 set(CMAKE_C_FLAGS
     "-Wall -ffunction-sections -fdata-sections -MMD -I./")
 set(CMAKE_LINKER "arm-linux-gnueabihf-ld")
