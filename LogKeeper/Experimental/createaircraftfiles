@@ -39,7 +39,7 @@ for ac in flarms:
         res = pop[2]
         pop = res.partition(' ')
         var = pop[0]
-#        print(id, t, lat, lon, z, trk, var)
-        ca.write(id + ' ' + t + ' ' + age + ' ' + lat + ' ' + lon + ' ' + z + ' ' + v + ' ' + trk + ' ' + var)
+        if age < 100  # Arbitary sanity limit.
+          ca.write(id + ' ' + t + ' ' + age + ' ' + lat + ' ' + lon + ' ' + z + ' ' + v + ' ' + trk + ' ' + var)
 
   ca.close()
