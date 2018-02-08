@@ -10,6 +10,7 @@
 [submodule "LogKeeper/src/lib/WSWireLib"]
 	path = LogKeeper/Arduino/lib/WSWireLib
 	url = https://github.com/Exadios/WSWireLib.git
+	url = git@github.com:Exadios/WSWireLib.git
 [submodule "lib/boost"]
 	path = lib/boost
 	url = git@github.com:Exadios/boost.git
