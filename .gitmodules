@@ -9,7 +9,7 @@
 	url = https://github.com/rocketscream/Low-Power.git
 [submodule "LogKeeper/src/lib/WSWireLib"]
 	path = LogKeeper/Arduino/lib/WSWireLib
-	url = https://github.com/steamfire/WSWireLib.git
+	url = https://github.com/Exadios/WSWireLib.git
 [submodule "lib/boost"]
 	path = lib/boost
 	url = git@github.com:Exadios/boost.git
