@@ -21,12 +21,16 @@ Copyright_License {
 }
 */
 
+#include <doublefann.h>
 #include <fann_cpp.h>
 
 //------------------------------------------------------------------------------
 int
 main(int argc, const char *argv[])
   {
+  FANN::neural_net net;
+
+  net.create_standard(4, 1024, 512, 4);
 
   return 0;
   }
