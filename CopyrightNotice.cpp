@@ -2,7 +2,8 @@
 Copyright_License {
 
   Glider Operations.
-  Copyright (C) 2013-2018 Peter F Bradshaw
+  Copyright (C) 2020-2020 Narrogin Gliding Club
+  Copyright (C) 2013-2020 Peter F Bradshaw
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or

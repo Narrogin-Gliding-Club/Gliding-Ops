@@ -1,6 +1,7 @@
 /*
  * Glider Operations.
- * Copyright (C) 2013-2018 Peter F Bradshaw
+ * Copyright (C) 2020-2020 Narrogin Gliding Club
+ * Copyright (C) 2013-2020 Peter F Bradshaw
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
