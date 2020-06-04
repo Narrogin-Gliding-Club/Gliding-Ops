@@ -3,6 +3,8 @@ Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2020-2020 Peter F Bradshaw
+  Copyright (C) 2020-2020 Narrogin Gliding Club
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -21,8 +23,8 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_STATE_CLOCK_HPP
-#define XCSOAR_STATE_CLOCK_HPP
+#ifndef STATE_CLOCK_HPP
+#define STATE_CLOCK_HPP
 
 #include <algorithm>
 
@@ -39,53 +41,60 @@ Copyright_License {
  * Subtract(), to avoid hiccups due to temporary GPS outage
  */
 template<unsigned max_value, unsigned max_delta>
-class StateClock {
-  double value;
+class StateClock
+  {
+    double value;
 
-public:
-  void Clear() {
-    value = 0;
-  }
-
-  bool IsDefined() const {
-    assert(value >= 0);
-
-    return value > 0;
-  }
-
-private:
-  static double LimitDelta(double delta) {
-    assert(delta >= 0);
-
-    return std::min(delta, double(max_delta));
-  }
-
-public:
-  void Add(double delta) {
-    assert(value >= 0);
-    assert(value <= double(max_value));
-
-    value += LimitDelta(delta);
-    if (value > double(max_value))
-      value = double(max_value);
-  }
-
-  void Subtract(double delta) {
-    assert(value >= 0);
-    assert(value <= double(max_value));
-
-    value -= LimitDelta(delta);
-    if (value < 0)
+  public:
+    void Clear()
+      {
       value = 0;
-  }
+      }
 
-  bool operator>=(double other) const {
-    assert(other > 0);
-    assert(value >= 0);
-    assert(value <= double(max_value));
+    bool IsDefined() const
+      {
+      assert(value >= 0);
 
-    return value >= other;
-  }
-};
+      return value > 0;
+      }
 
-#endif
+  private:
+    static double LimitDelta(double delta)
+      {
+      assert(delta >= 0);
+
+      return std::min(delta, double(max_delta));
+      }
+
+  public:
+    void Add(double delta)
+      {
+      assert(value >= 0);
+      assert(value <= double(max_value));
+
+      value += LimitDelta(delta);
+      if (value > double(max_value))
+        value = double(max_value);
+      }
+
+    void Subtract(double delta)
+      {
+      assert(value >= 0);
+      assert(value <= double(max_value));
+
+      value -= LimitDelta(delta);
+      if (value < 0)
+        value = 0;
+      }
+
+    bool operator>=(double other) const
+      {
+      assert(other > 0);
+      assert(value >= 0);
+      assert(value <= double(max_value));
+
+      return value >= other;
+      }
+  };
+
+#endif  // STATE_CLOCK_HPP
