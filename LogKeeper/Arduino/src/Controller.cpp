@@ -50,7 +50,8 @@ Copyright_License {
 #define OFF             LOW   // Relay deactivated
 
 #define BAT_SETPOINT_1 uint16_t(718)  // 11.0V
-#define BAT_SETPOINT_2 uint16_t(750)  // 11.5V
+//#define BAT_SETPOINT_2 uint16_t(750)  // 11.5V
+#define BAT_SETPOINT_2 uint16_t(783)  // 12.0V
 #define BAT_SETPOINT_3 uint16_t(783)  // 12.0V
 #define BAT_SETPOINT_4 uint16_t(802)  // 12.3V
 #define BAT_SETPOINT_5 uint16_t(822)  // 12.6V

@@ -1,0 +1,15 @@
+[Unit]
+Description=Dump1090 Process
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /home/pi/bin/adsb start
+StandardInput=null
+StandardOutput=null
+StandardError=null
+Restart=always
+RestartSec=30
+User=pi
+
+[Install]
+WantedBy=multi-user.target

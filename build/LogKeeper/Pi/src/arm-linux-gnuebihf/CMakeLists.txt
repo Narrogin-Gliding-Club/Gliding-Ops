@@ -2,6 +2,9 @@ set(BOOST_INCLUDE_DIR ${BOOST_DIR}/arm-linux-gnueabihf-gcc/include)
 set(BOOST_LIB_DIR ${BOOST_DIR}/arm-linux-gnueabihf-gcc/lib)
 add_compile_options(-I${BOOST_INCLUDE_DIR} -DBOOST_NO_EXCEPTIONS -DBOOST_NO_AUTO_PTR)
 add_compile_options(-I${WIRINGPI_LIB_DIR}/include)
+set(BOOST_LIB_DIR ${BOOST_DIR}/arm-linux-gnueabihf-gcc/lib)
+add_compile_options(-I${BOOST_INCLUDE_DIR} -DBOOST_NO_EXCEPTIONS -DBOOST_NO_AUTO_PTR)
+add_compile_options(-I${WIRINGPI_LIB_DIR}/include)
 
 add_definitions(-DPI)
 

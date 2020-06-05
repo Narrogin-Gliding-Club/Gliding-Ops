@@ -1,10 +1,4 @@
 *.swp
-*.aux
-*.lof
-*.log
-*.out
-*.pdf
-*.toc
 
 # Generated files
 out/*
