@@ -19,4 +19,5 @@
 	url = git@github.com:Exadios/boost.git
 [submodule "LogKeeper/Pi/lib/wiringPi"]
 	path = LogKeeper/Pi/lib/wiringPi
-	url = git://git.drogon.net/wiringPi
+	url = git@github.com:Narrogin-Gliding-Club/wiringPi.git
+	branch = master
