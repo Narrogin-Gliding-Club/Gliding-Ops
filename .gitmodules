@@ -21,3 +21,6 @@
 	path = LogKeeper/Pi/lib/wiringPi
 	url = git@github.com:Narrogin-Gliding-Club/wiringPi.git
 	branch = master
+[submodule "LogKeeper/Experimental/APRS/python-ogn-client"]
+	path = LogKeeper/Experimental/APRS/python-ogn-client
+	url = git@github.com:glidernet/python-ogn-client.git
