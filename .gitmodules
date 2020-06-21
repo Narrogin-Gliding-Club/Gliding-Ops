@@ -24,3 +24,6 @@
 [submodule "LogKeeper/Experimental/APRS/python-ogn-client"]
 	path = LogKeeper/Experimental/APRS/python-ogn-client
 	url = git@github.com:glidernet/python-ogn-client.git
+[submodule "LogKeeper/lib/python-ogn-client"]
+	path = LogKeeper/lib/python-ogn-client
+	url = git@github.com:glidernet/python-ogn-client.git
