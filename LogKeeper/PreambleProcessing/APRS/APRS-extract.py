@@ -5,7 +5,7 @@ from ogn.parser import parse_aprs, ParseError
 import sys
 import os
 
-def main():
+def main(hex):
   for sin in sys.stdin:
     try:
       try:
@@ -14,9 +14,13 @@ def main():
       except ParseError as e:
         print('Error, {}'.format(e.message), file = sys.stderr)
 
+      if beacon['aprs_type'] == 'position':
+        if beacon['name'] == hex:
+          print(sin, end = "")
+
     except StopIteration:
-      sin=""
+      sin = ""
 
 if __name__ == "__main__":
-  main()
+  main(hex = sys.argv[2])
 
