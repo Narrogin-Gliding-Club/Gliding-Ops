@@ -20,5 +20,5 @@ fi
 station=$(cat ${EXECUTABLE_PATH}/filters.txt | grep "^${1}" | cut -d ':' -f 1)
 filter=$(cat ${EXECUTABLE_PATH}/filters.txt | grep "^${1}" | cut -d ':' -f 2)
 #echo "python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} $filter"
-echo "Station = ${station}, filter = $filter"
+echo "Station = ${station}, filter = $filter" >&2
 python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} $filter
