@@ -4,21 +4,13 @@ import os
 import sys
  
 def process_beacon(raw_message):
-    if raw_message[0] == '#':
-        print('Server Status: {}'.format(raw_message))
-        return
+  print(raw_message)
  
-    try:
-        beacon = parse_aprs(raw_message)
-        print('Received {aprs_type}: {raw_message}'.format(**beacon))
-    except ParseError as e:
-        print('Error, {}'.format(e.message))
- 
-client = AprsClient(aprs_user=sys.argv[1], aprs_filter=sys.argv[2])
+client = AprsClient(aprs_user = sys.argv[1], aprs_filter = sys.argv[2])
 client.connect()
 
 try:
-    client.run(callback=process_beacon, autoreconnect=True)
+  client.run(callback=process_beacon, autoreconnect = True)
 except KeyboardInterrupt:
-    print('\nStop ogn gateway')
-    client.disconnect()
+  print('\nStop ogn gateway', file = sys.stderr)
+  client.disconnect()
