@@ -12,7 +12,7 @@ def process_beacon(raw_message):
         beacon = parse_aprs(raw_message)
         print('Received {aprs_type}: {raw_message}'.format(**beacon))
     except ParseError as e:
-        print('Error, {}'.format(e.message))
+        print('Error, {}'.format(e.message, file=sys.stderr))
  
 client = AprsClient(aprs_user=sys.argv[1], aprs_filter=sys.argv[2])
 client.connect()
