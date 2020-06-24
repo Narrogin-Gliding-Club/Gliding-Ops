@@ -10,16 +10,18 @@ def main():
     try:
       try:
         beacon = parse_aprs(sin)
-
       except ParseError as e:
         print('Error, {}'.format(e.message), file = sys.stderr)
 
-      print('{} {} {}'.format(beacon['latitude'],
-                              beacon['longitude'],
-                              beacon['altitude']))
-
-    except StopIteration:
-      sin = ""
+      if beacon['aprs_type'] == 'position':
+        try:
+          print('{} {} {}'.format(beacon['latitude'],
+                                  beacon['longitude'],
+                                  beacon['altitude']))
+        except KeyError:
+          print('KeyError', file = sys.stderr)
+    except StopIteration as e:
+      print('StopIteration, {}'.format(e.message), file = sys.stderr)
 
 if __name__ == "__main__":
   main()
