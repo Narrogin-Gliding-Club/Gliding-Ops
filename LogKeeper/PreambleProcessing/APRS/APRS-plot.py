@@ -4,8 +4,23 @@
 from ogn.parser import parse_aprs, ParseError
 import sys
 import os
+import getopt
 
 def main():
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], "e")
+  except getopt.GetoptError as err:
+    print(err)
+    usage()
+    sys.exit(1)
+
+  energy = False
+  for o, a in opts:
+    if o == '-e':
+      energy = True
+    else:
+      assert False
+
   for sin in sys.stdin:
     try:
       try:
@@ -15,9 +30,14 @@ def main():
 
       if beacon['aprs_type'] == 'position':
         try:
-          print('{} {} {}'.format(beacon['latitude'],
-                                  beacon['longitude'],
-                                  beacon['altitude']))
+          if energy == False:
+            print('{} {} {}'.format(beacon['latitude'],
+                                    beacon['longitude'],
+                                    beacon['altitude']))
+          else:
+            print('{} {} {}'.format(beacon['timestamp'],
+                                    beacon['altitude'],
+                                    beacon['ground_speed']))
         except KeyError:
           print('KeyError', file = sys.stderr)
     except StopIteration as e:
