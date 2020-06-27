@@ -15,6 +15,7 @@ def main():
     sys.exit(1)
 
   energy = False
+  velocity = False
   for o, a in opts:
     if o == '-e':
       energy = True
@@ -30,14 +31,17 @@ def main():
 
       if beacon['aprs_type'] == 'position':
         try:
-          if energy == False:
+          if energy == False and velocity == False:
             print('{} {} {}'.format(beacon['latitude'],
                                     beacon['longitude'],
                                     beacon['altitude']))
-          else:
+          elif energy == True and velocity == False:
             print('{} {} {}'.format(beacon['timestamp'],
                                     beacon['altitude'],
                                     beacon['ground_speed']))
+          else:
+            print("Logic error energy = {}, velocity = {}".format(energy,
+                                                                  velocity))
         except KeyError:
           print('KeyError', file = sys.stderr)
     except StopIteration as e:
