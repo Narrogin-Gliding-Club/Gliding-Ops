@@ -1,11 +1,17 @@
-# The purpose of this utility is to extract a specified aircraft from a
-# APRS stream. The input is stdin and the output is stdout. The desired
-# aircraft is specified by the six digit hex code.
+# The purpose of this utility is to produce plot data (x, y, z) from a
+# previously extracted aircraft stream. The input is stdin and the output
+# is stdout. 
 from ogn.parser import parse_aprs, ParseError
 import sys
 import os
+import argparse
 
 def main():
+  parser = argparse.ArgumentParser(description = 'Generate plot data')
+  parser.add_argument('--zmax', type = int, help = 'Max Z value')
+  parser.add_argument('--zmin', type = int, help = 'Min Z value')
+  args = parser.parse_args()
+
   for sin in sys.stdin:
     try:
       try:
@@ -15,9 +21,10 @@ def main():
 
       if beacon['aprs_type'] == 'position':
         try:
-          print('{} {} {}'.format(beacon['latitude'],
-                                  beacon['longitude'],
-                                  beacon['altitude']))
+          if (beacon['altitude'] >= args.zmin) & (beacon['altitude'] <= args.zmax):
+            print('{} {} {}'.format(beacon['latitude'],
+                                    beacon['longitude'],
+                                    beacon['altitude']))
         except KeyError:
           print('KeyError', file = sys.stderr)
     except StopIteration as e:
