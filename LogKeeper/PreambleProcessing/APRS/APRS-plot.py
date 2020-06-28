@@ -5,20 +5,23 @@ from ogn.parser import parse_aprs, ParseError
 import sys
 import os
 import getopt
+import datetime, time
 
 def main():
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "e")
+    opts, args = getopt.getopt(sys.argv[1:], "ev")
   except getopt.GetoptError as err:
     print(err)
     usage()
     sys.exit(1)
 
   energy = False
-  velocity = False
+  velocity =False 
   for o, a in opts:
-    if o == '-e':
+    if o in ('-e'):
       energy = True
+    elif o in ('-v'):
+      velocity = True
     else:
       assert False
 
@@ -36,8 +39,17 @@ def main():
                                     beacon['longitude'],
                                     beacon['altitude']))
           elif energy == True and velocity == False:
-            print('{} {} {}'.format(beacon['timestamp'],
+            dt = beacon['timestamp']
+            print('{} {} {}'.format(dt.hour * 3600 + dt.minute * 60 + dt.second,
                                     beacon['altitude'],
+
+                                    beacon['ground_speed']))
+          elif energy == False and velocity == True:
+            c = beacon['comment']
+            cv = c.split(' ')
+            dt = beacon['timestamp']
+            print('{} {} {}'.format(dt.hour * 3600 + dt.minute * 60 + dt.second,
+                                    cv[1],
                                     beacon['ground_speed']))
           else:
             print("Logic error energy = {}, velocity = {}".format(energy,
@@ -46,6 +58,10 @@ def main():
           print('KeyError', file = sys.stderr)
     except StopIteration as e:
       print('StopIteration, {}'.format(e.message), file = sys.stderr)
+
+def usage():
+  print('Usage: {} [-e] [-v]'.format(sys.argv[1]))
+  return
 
 if __name__ == "__main__":
   main()
