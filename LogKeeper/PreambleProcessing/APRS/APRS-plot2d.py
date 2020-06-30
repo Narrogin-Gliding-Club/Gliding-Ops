@@ -6,22 +6,32 @@ import sys
 import os
 import getopt
 import datetime, time
+import math
 
 def main():
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "ev")
+    opts, args = getopt.getopt(sys.argv[1:], "lvae", ["all"])
   except getopt.GetoptError as err:
     print(err)
     usage()
     sys.exit(1)
 
-  energy = False
-  velocity =False 
+  log      = False
+  a        = False
+  altitude = False
+  velocity = False
+  energy   = False
   for o, a in opts:
-    if o in ('-e'):
-      energy = True
-    elif o in ('-v'):
+    if o  == '-l':
+      log = True
+    elif o == '-v':
       velocity = True
+    elif o == '-a':
+      altitude = True
+    elif o == '-e':
+      energy = True
+    elif o == '--all':
+      a = True
     else:
       assert False
 
@@ -51,32 +61,56 @@ def main():
       print('StopIteration, {}'.format(e.message), file = sys.stderr)
     records.append(record)
   
-  for record in records:
-    if record[1] == 'position':
-      print('{} {}'.format(record[6].hour * 3600 +
-                           record[6].minute * 60 +
-                           record[6].second,
-                           record[10]))
-  print()
+  if velocity == True or a == True:
+    for record in records:
+      if record[1] == 'position':
+        if log == True:
+          try:
+            y = math.log(record[10])
+          except ValueError:  # y = log(0)
+            y = -1
+        else:
+          y = record[10]
+        print('{} {}'.format(record[6].hour * 3600 +
+                             record[6].minute * 60 +
+                             record[6].second,
+                             y))
+    print()
 
-  for record in records:
-    if record[1] == 'position':
-      print('{} {}'.format(record[6].hour * 3600 +
-                           record[6].minute * 60 +
-                           record[6].second,
-                           record[11]))
-  print()
+  if altitude == True or a == True:
+    for record in records:
+      if record[1] == 'position':
+        if log == True:
+          try:
+            y = math.log(record[11])
+          except ValueError:
+            y = -1
+        else:
+          y = record[11]
+        print('{} {}'.format(record[6].hour * 3600 +
+                             record[6].minute * 60 +
+                             record[6].second,
+                             y))
+    print()
 
-  for record in records:
-    if record[1] == 'position':
-      print('{} {}'.format(record[6].hour * 3600 +
-                           record[6].minute * 60 +
-                           record[6].second,
-                           record[10] * record[10] + record[11]))
-  print()
+  if energy == True or a == True:
+    for record in records:
+      if record[1] == 'position':
+        if log == True:
+          try:
+            y = math.log(record[10] * record[10] + record[11])
+          except ValueError:
+            y = -1
+        else:
+          y = record[10] * record[10] + record[11]
+        print('{} {}'.format(record[6].hour * 3600 +
+                             record[6].minute * 60 +
+                             record[6].second,
+                             y))
+    print()
 
 def usage():
-  print('Usage: {} [-e] [-v]'.format(sys.argv[1]))
+  print('Usage: {} [-e] [-v] [-a] [-l] [--all]'.format(sys.argv[1]))
   return
 
 if __name__ == "__main__":
