@@ -9,7 +9,7 @@ import datetime, time
 
 def main():
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "ev")
+    opts, args = getopt.getopt(sys.argv[1:], "evz", ['zero='])
   except getopt.GetoptError as err:
     print(err)
     usage()
@@ -17,11 +17,14 @@ def main():
 
   energy = False
   velocity =False 
+  zero_height = 0.0
   for o, a in opts:
     if o in ('-e'):
       energy = True
     elif o in ('-v'):
       velocity = True
+    elif o in ('-z', '--zero'):
+      zero_height = float(a)
     else:
       assert False
 
@@ -38,12 +41,14 @@ def main():
             print('{} {} {}'.format(beacon['latitude'],
                                     beacon['longitude'],
                                     beacon['altitude']))
+
           elif energy == True and velocity == False:
+            vs = beacon['ground_speed'] * 1000 / 3600 # Now in meters / sec.
             dt = beacon['timestamp']
             print('{} {} {}'.format(dt.hour * 3600 + dt.minute * 60 + dt.second,
-                                    beacon['altitude'],
+                                    (beacon['altitude'] - zero_height) * 9.8,
+                                    vs * vs * 0.5))
 
-                                    beacon['ground_speed']))
           elif energy == False and velocity == True:
             c = beacon['comment']
             cv = c.split(' ')
@@ -60,7 +65,7 @@ def main():
       print('StopIteration, {}'.format(e.message), file = sys.stderr)
 
 def usage():
-  print('Usage: {} [-e] [-v]'.format(sys.argv[1]))
+  print('Usage: {} [-e] [-v] [-z <height>]'.format(sys.argv[1]))
   return
 
 if __name__ == "__main__":
