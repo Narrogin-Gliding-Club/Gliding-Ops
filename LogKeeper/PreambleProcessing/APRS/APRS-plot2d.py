@@ -10,20 +10,20 @@ import math
 
 def main():
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "lvae", ["all"])
+    opts, args = getopt.getopt(sys.argv[1:], "zvae", ["all", "zero="])
   except getopt.GetoptError as err:
     print(err)
     usage()
     sys.exit(1)
 
-  log      = False
   a        = False
   altitude = False
   velocity = False
   energy   = False
+  zero     = 0.0
   for o, a in opts:
-    if o  == '-l':
-      log = True
+    if o  in ('-z', '--zero'):
+      zero = float(a)
     elif o == '-v':
       velocity = True
     elif o == '-a':
@@ -64,13 +64,7 @@ def main():
   if velocity == True or a == True:
     for record in records:
       if record[1] == 'position':
-        if log == True:
-          try:
-            y = math.log(record[10])
-          except ValueError:  # y = log(0)
-            y = -1
-        else:
-          y = record[10]
+        y = record[10]
         print('{} {}'.format(record[6].hour * 3600 +
                              record[6].minute * 60 +
                              record[6].second,
@@ -80,13 +74,7 @@ def main():
   if altitude == True or a == True:
     for record in records:
       if record[1] == 'position':
-        if log == True:
-          try:
-            y = math.log(record[11])
-          except ValueError:
-            y = -1
-        else:
-          y = record[11]
+        y = record[11]
         print('{} {}'.format(record[6].hour * 3600 +
                              record[6].minute * 60 +
                              record[6].second,
@@ -96,13 +84,8 @@ def main():
   if energy == True or a == True:
     for record in records:
       if record[1] == 'position':
-        if log == True:
-          try:
-            y = math.log(record[10] * record[10] + record[11])
-          except ValueError:
-            y = -1
-        else:
-          y = record[10] * record[10] + record[11]
+        v = record[10] * 1000 / 3600  # Now in meters / second
+        y = v * v * 0.5 + (record[11] - zero) * 9.8
         print('{} {}'.format(record[6].hour * 3600 +
                              record[6].minute * 60 +
                              record[6].second,
