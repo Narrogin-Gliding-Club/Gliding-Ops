@@ -16,11 +16,11 @@ def main():
     usage()
     sys.exit(1)
 
-  a        = False
-  altitude = False
-  velocity = False
-  energy   = False
-  zero     = 0.0
+  everything = False
+  altitude   = False
+  velocity   = False
+  energy     = False
+  zero       = 0.0
   for o, a in opts:
     if o  in ('-z', '--zero'):
       zero = float(a)
@@ -31,7 +31,7 @@ def main():
     elif o == '-e':
       energy = True
     elif o == '--all':
-      a = True
+      everything = True
     else:
       assert False
 
@@ -61,7 +61,7 @@ def main():
       print('StopIteration, {}'.format(e.message), file = sys.stderr)
     records.append(record)
   
-  if velocity == True or a == True:
+  if velocity == True or everything == True:
     for record in records:
       if record[1] == 'position':
         y = record[10]
@@ -71,7 +71,7 @@ def main():
                              y))
     print()
 
-  if altitude == True or a == True:
+  if altitude == True or everything == True:
     for record in records:
       if record[1] == 'position':
         y = record[11]
@@ -81,7 +81,7 @@ def main():
                              y))
     print()
 
-  if energy == True or a == True:
+  if energy == True or everything == True:
     for record in records:
       if record[1] == 'position':
         v = record[10] * 1000 / 3600  # Now in meters / second
