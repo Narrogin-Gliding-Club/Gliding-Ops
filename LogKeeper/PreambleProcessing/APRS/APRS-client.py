@@ -5,6 +5,7 @@ import sys
  
 def process_beacon(raw_message):
   print(raw_message)
+  sys.stdout.flush()
  
 client = AprsClient(aprs_user = sys.argv[1], aprs_filter = sys.argv[2])
 client.connect()
