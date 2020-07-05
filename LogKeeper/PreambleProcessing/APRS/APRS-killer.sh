@@ -10,6 +10,6 @@ DATA_PATH=${BASE}/Data/YNRG/APRS
 
 for locker in $(ls ${DATA_PATH}/*.lock)
 do
-  kill -SIGINT $(cat ${locker})
+  kill -SIGHUP $(cat ${locker})
   rm ${locker}
 done
