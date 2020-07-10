@@ -21,14 +21,14 @@ station=$(cat ${EXECUTABLE_PATH}/filters.txt | grep "^${1}" | cut -d ':' -f 1)
 filter=$(cat ${EXECUTABLE_PATH}/filters.txt | grep "^${1}" | cut -d ':' -f 2)
 echo "Station = ${station}, filter = $filter" >&2
 file_base=$(date "+%Y-%m-%d")
-DATA_PATH=${BASE}/Data/YNRG/APRS
+DATA_PATH=${BASE}/Data/${station}/APRS
 OUTPUT_FILE=${DATA_PATH}/${file_base}.raw.aprs
 LOCK_FILE=${DATA_PATH}/${file_base}.raw.lock
 echo "Writing to ${OUTPUT_FILE}"
 if [ -f ${OUTPUT_FILE} ]
 then
-  python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} $filter >> ${OUTPUT_FILE} &
+  python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} ${filter} >> ${OUTPUT_FILE} &
 else
-  python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} $filter > ${OUTPUT_FILE} &
+  python3 ${EXECUTABLE_PATH}/APRS-client.py ${station} ${filter} > ${OUTPUT_FILE} &
 fi
 echo $! > ${LOCK_FILE}
