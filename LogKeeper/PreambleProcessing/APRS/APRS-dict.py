@@ -1,3 +1,5 @@
+# This script will output the parsed stream from a APRS stream.
+
 from ogn.client import AprsClient
 from ogn.parser import parse_aprs, ParseError
 import os
