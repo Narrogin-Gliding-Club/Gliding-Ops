@@ -1,3 +1,5 @@
+# The purpose of this script is to act as a client to the APRS cluster.
+
 from ogn.client import AprsClient
 from ogn.parser import parse_aprs, ParseError
 import os
