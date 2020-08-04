@@ -5,4 +5,4 @@ EXECUTABLE_PATH=${BASE}/PreambleProcessing/APRS
 LIB_BASE=${BASE}/lib
 export PYTHONPATH=${PYTHONPATH}:${LIB_BASE}/python-ogn-client
 
-python3 ${EXECUTABLE_PATH}/APRS-logger.py $@
+python3 ${EXECUTABLE_PATH}/APRS-evaluation.py $@
