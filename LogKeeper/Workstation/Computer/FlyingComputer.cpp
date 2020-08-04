@@ -24,26 +24,26 @@ Copyright_License {
 */
 
 #include "FlyingComputer.hpp"
-#include "NMEA/Info.hpp"
-#include "NMEA/Derived.hpp"
+#include "FlyingState.hpp"
+#include "Info.hpp"
 #include "Engine/Navigation/Aircraft.hpp"
 
 //------------------------------------------------------------------------------
 void
 FlyingComputer::Reset()
   {
-  delta_time.Reset();
-
-  stationary_clock.Clear();
-  moving_clock.Clear();
-  climbing_clock.Clear();
-  moving_since = -1;
-  stationary_since = -1;
-  climbing_altitude = 0;
-  sinking_since = -1;
-  powered_since = -1;
-  unpowered_since = -1;
-  last_ground_altitude = -1;
+  this->delta_time.Reset();
+  this->stationary_clock.Clear();
+  this->moving_clock.Clear();
+  this->climbing_clock.Clear();
+  this->moving_since = -1;
+  this->stationary_since = -1;
+  this->climbing_altitude = 0;
+  this->sinking_since = -1;
+  this->powered_since = -1;
+  this->unpowered_since = -1;
+  this->last_ground_altitude = -1;
+  this->field_altitude = 0;
   }
 
 //------------------------------------------------------------------------------
@@ -53,27 +53,28 @@ FlyingComputer::CheckRelease(FlyingState &state,
                              const GeoPoint &location,
                              double altitude)
   {
-  if (!state.flying || state.release_time >= 0 ||
-      stationary_clock.IsDefined())
+  if (!state.flying ||
+      state.release_time >= 0 ||
+      this->stationary_clock.IsDefined())
     return;
 
   if (sinking_since < 0)
     {
-    sinking_since = time;
-    sinking_location = location;
-    sinking_altitude = altitude;
+    this->sinking_since = time;
+    this->sinking_location = location;
+    this->sinking_altitude = altitude;
     return;
     }
 
-  if (time < sinking_since || altitude >= sinking_altitude)
+  if (time < this->sinking_since || altitude >= this->sinking_altitude)
     {
     /* cancel release detection when the aircraft has been climbing
        more than it has lost recently */
-    sinking_since = -1;
+    this->sinking_since = -1;
     return;
     }
 
-  if (time - sinking_since >= 10)
+  if (time - this->sinking_since >= 10)
     {
     /* assume release from tow if aircraft has not gained any height
        for 10 seconds; there will be false negatives if the glider
@@ -97,14 +98,14 @@ FlyingComputer::Check(FlyingState &state, double time)
   if (!state.flying)
     {
     // We are moving for 10sec now
-    if (moving_clock >= 10)
+    if (this->moving_clock >= 10)
       {
       // We certainly must be flying after 10sec movement
-      assert(moving_since >= 0);
+      assert(this->moving_since >= 0);
 
       state.flying = true;
-      state.takeoff_time = moving_since;
-      state.takeoff_location = moving_at;
+      state.takeoff_time = this->moving_since;
+      state.takeoff_location = this->moving_at;
       state.flight_time = 0;
 
       /* when a new flight starts, forget the old release and power-on/off time */
@@ -121,22 +122,22 @@ FlyingComputer::Check(FlyingState &state, double time)
     state.flight_time = time - state.takeoff_time;
 
     // We are not moving anymore for 60sec now
-    if (!moving_clock.IsDefined())
+    if (!this->moving_clock.IsDefined())
       {
       // We are probably not flying anymore
-      assert(stationary_since >= 0);
+      assert(this->stationary_since >= 0);
 
       state.flying = false;
-      state.flight_time = stationary_since - state.takeoff_time;
-      state.landing_time = stationary_since;
-      state.landing_location = stationary_at;
+      state.flight_time = this->stationary_since - state.takeoff_time;
+      state.landing_time = this->stationary_since;
+      state.landing_location = this->stationary_at;
       }
     }
 
   // If we are not certainly flying we are probably on the ground
   // To make sure that we are, wait for 10sec to make sure there
   // is no more movement
-  state.on_ground = !state.flying && stationary_clock >= 10;
+  state.on_ground = !state.flying && this->stationary_clock >= 10;
   }
 
 //------------------------------------------------------------------------------
@@ -145,20 +146,20 @@ FlyingComputer::Moving(FlyingState &state, double time, double dt,
                        const GeoPoint &location)
   {
   // Increase InFlight countdown for further evaluation
-  moving_clock.Add(dt);
+  this->moving_clock.Add(dt);
 
-  if (moving_since < 0)
+  if (this->moving_since < 0)
     {
-    moving_since = time;
-    moving_at = location;
+    this->moving_since = time;
+    this->moving_at = location;
     }
 
   // We are moving so we are certainly not on the ground
-  stationary_clock.Clear();
-  stationary_since = -1;
+  this->stationary_clock.Clear();
+  this->stationary_since = -1;
 
   // Update flying state
-  Check(state, time);
+  this->Check(state, time);
   }
 
 //------------------------------------------------------------------------------
@@ -167,29 +168,29 @@ FlyingComputer::Stationary(FlyingState &state, double time, double dt,
                            const GeoPoint &location)
   {
   // Decrease InFlight countdown for further evaluation
-  if (moving_clock.IsDefined())
+  if (this->moving_clock.IsDefined())
     {
-    moving_clock.Subtract(dt);
-    if (!moving_clock.IsDefined())
-      moving_since = -1;
+    this->moving_clock.Subtract(dt);
+    if (!this->moving_clock.IsDefined())
+      this->moving_since = -1;
     }
 
-  stationary_clock.Add(dt);
+  this->stationary_clock.Add(dt);
 
-  if (stationary_since < 0)
+  if (this->stationary_since < 0)
     {
-    stationary_since = time;
-    stationary_at = location;
+    this->stationary_since = time;
+    this->stationary_at = location;
     }
 
   // Update flying state
-  Check(state, time);
+  this->Check(state, time);
   }
 
 //------------------------------------------------------------------------------
 gcc_pure
 static bool
-CheckTakeOffSpeed(double takeoff_speed, const NMEAInfo &basic)
+CheckTakeOffSpeed(double takeoff_speed, const Info &basic)
   {
   const auto speed = basic.airspeed_available
                      ? (basic.airspeed_real ||
@@ -215,7 +216,7 @@ CheckTakeOffSpeed(double takeoff_speed, const NMEAInfo &basic)
  */
 gcc_pure
 static bool
-CheckLandingSpeed(double takeoff_speed, const NMEAInfo &basic)
+CheckLandingSpeed(double takeoff_speed, const Info &basic)
   {
   return !CheckTakeOffSpeed(takeoff_speed / 2, basic);
   }
@@ -223,9 +224,10 @@ CheckLandingSpeed(double takeoff_speed, const NMEAInfo &basic)
 //------------------------------------------------------------------------------
 gcc_pure
 static bool
-CheckAltitudeAGL(const DerivedInfo &calculated)
+CheckAltitudeAGL(double qnh_altitude, double field_altitude)
   {
-  return calculated.altitude_agl_valid && calculated.altitude_agl >= 300;
+  //return calculated.altitude_agl_valid && calculated.altitude_agl >= 300;
+  return (qnh_altitude - field_altitude) > 300;
   }
 
 //------------------------------------------------------------------------------
@@ -233,46 +235,48 @@ inline bool
 FlyingComputer::CheckClimbing(double dt, double altitude)
   {
   if (altitude > climbing_altitude + 0.1)
-    climbing_clock.Add(dt);
+    this->climbing_clock.Add(dt);
   else
-    climbing_clock.Subtract(dt);
+    this->climbing_clock.Subtract(dt);
 
-  climbing_altitude = altitude;
+  this->climbing_altitude = altitude;
 
-  return climbing_clock >= dt + 1;
+  return this->climbing_clock >= dt + 1;
   }
 
 //------------------------------------------------------------------------------
 inline void
-FlyingComputer::CheckPowered(double dt, const NMEAInfo &basic,
+FlyingComputer::CheckPowered(double dt, const Info &basic,
                              FlyingState &flying)
   {
   if (basic.engine_noise_level > 500 &&
-      powered_since < 0)
+      this->powered_since < 0)
     {
-    powered_since = basic.time;
-    powered_at = basic.location;
+    this->powered_since = basic.time;
+    this->powered_at = basic.location;
 
-    unpowered_since = -1;
-    unpowered_at.SetInvalid();
+    this->unpowered_since = -1;
+    this->unpowered_at.SetInvalid();
     }
-  else if (basic.engine_noise_level <= 350 &&
-           unpowered_since < 0)
+  else if (basic.engine_noise_level <= 350 && unpowered_since < 0)
     {
-    unpowered_since = basic.time;
-    unpowered_at = basic.location;
+    this->unpowered_since = basic.time;
+    this->unpowered_at = basic.location;
 
-    powered_since = -1;
-    powered_at.SetInvalid();
+    this->powered_since = -1;
+    this->powered_at.SetInvalid();
     }
 
-  if (powered_since >= 0 && unpowered_since < 0 && basic.time - powered_since >= 30)
+  if (this->powered_since >= 0 &&
+      this->unpowered_since < 0 &&
+      basic.time - this->powered_since >= 30)
     {
     flying.powered = true;
     flying.power_on_time = powered_since;
     flying.power_on_location = powered_at;
     }
-  else if (unpowered_since >= 0 && basic.time - unpowered_since >= 30)
+  else if (this->unpowered_since >= 0 &&
+           basic.time - this->unpowered_since >= 30)
     {
     flying.powered = false;
     flying.power_off_time = unpowered_since;
@@ -283,14 +287,13 @@ FlyingComputer::CheckPowered(double dt, const NMEAInfo &basic,
 //------------------------------------------------------------------------------
 void
 FlyingComputer::Compute(double takeoff_speed,
-                        const NMEAInfo &basic,
-                        const DerivedInfo &calculated,
+                        const Info &basic,
                         FlyingState &flying)
   {
   if (!basic.time_available || !basic.location_available)
     return;
 
-  const auto dt = delta_time.Update(basic.time, 0.5, 20);
+  const auto dt = this->delta_time.Update(basic.time, 0.5, 20);
   if (dt < 0)
     {
     Reset();
@@ -302,15 +305,16 @@ FlyingComputer::Compute(double takeoff_speed,
 
   const auto any_altitude = basic.GetAnyAltitude();
 
-  if (!basic.airspeed_available && !calculated.altitude_agl_valid &&
-      any_altitude.first && last_ground_altitude >= 0 &&
-      any_altitude.second > last_ground_altitude + 250)
+  /* Note figure out what's happening here. */
+  if (!basic.airspeed_available && false &&
+      any_altitude.first && this->last_ground_altitude >= 0 &&
+      any_altitude.second > this->last_ground_altitude + 250)
     {
     /* lower the threshold for "not moving" when the aircraft is high
        above the take-off airfield and there's no airspeed probe; this
        shall reduce the risk of false landing detection when flying in
        strong head wind (e.g. ridge or wave) */
-    auto dh = any_altitude.second - last_ground_altitude;
+    auto dh = any_altitude.second - this->last_ground_altitude;
 
     if (dh > 1000)
       takeoff_speed /= 4;
@@ -320,26 +324,27 @@ FlyingComputer::Compute(double takeoff_speed,
       takeoff_speed = takeoff_speed * 2 / 3;
     }
 
-  if (CheckTakeOffSpeed(takeoff_speed, basic) ||
-      CheckAltitudeAGL(calculated))
-    Moving(flying, basic.time, dt, basic.location);
+  if (::CheckTakeOffSpeed(takeoff_speed, basic) ||
+      ::CheckAltitudeAGL(basic.gps_altitude, this->field_altitude))
+    this->Moving(flying, basic.time, dt, basic.location);
   else if (!flying.flying ||
-           (CheckLandingSpeed(takeoff_speed, basic) &&
-            (!any_altitude.first || !CheckClimbing(dt, any_altitude.second))))
-    Stationary(flying, basic.time, dt, basic.location);
+           (::CheckLandingSpeed(takeoff_speed, basic) &&
+            (!any_altitude.first ||
+             !this->CheckClimbing(dt, any_altitude.second))))
+    this->Stationary(flying, basic.time, dt, basic.location);
 
   if (basic.engine_noise_level_available)
-    CheckPowered(dt, basic, flying);
+    this->CheckPowered(dt, basic, flying);
 
   if (any_altitude.first)
     {
     if (flying.on_ground)
-      last_ground_altitude = any_altitude.second;
+      this->last_ground_altitude = any_altitude.second;
 
-    CheckRelease(flying, basic.time, basic.location, any_altitude.second);
+    this->CheckRelease(flying, basic.time, basic.location, any_altitude.second);
     }
   else
-    sinking_since = -1;
+    this->sinking_since = -1;
 
   if (flying.flying && flying.release_location.IsValid())
     {
@@ -362,9 +367,9 @@ FlyingComputer::Compute(double takeoff_speed,
     return;
 
   if (state.ground_speed > takeoff_speed)
-    Moving(flying, state.time, dt, state.location);
+    this->Moving(flying, state.time, dt, state.location);
   else
-    Stationary(flying, state.time, dt, state.location);
+    this->Stationary(flying, state.time, dt, state.location);
   }
 
 //------------------------------------------------------------------------------
@@ -374,5 +379,20 @@ FlyingComputer::Finish(FlyingState &flying, double time)
   if (flying.flying && stationary_clock >= 5)
     moving_clock.Clear();
 
-  Check(flying, time);
+  this->Check(flying, time);
   }
+
+//------------------------------------------------------------------------------
+void
+FlyingComputer::FieldAltitude(double altitude)
+  {
+  this->field_altitude = altitude;
+  }
+
+//------------------------------------------------------------------------------
+double
+FlyingComputer::FieldAltitude() const
+  {
+  return this->field_altitude;
+  }
+

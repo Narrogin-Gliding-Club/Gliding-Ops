@@ -48,14 +48,14 @@ class StateClock
   public:
     void Clear()
       {
-      value = 0;
+      this->value = 0;
       }
 
     bool IsDefined() const
       {
-      assert(value >= 0);
+      assert(this->value >= 0);
 
-      return value > 0;
+      return this->value > 0;
       }
 
   private:
@@ -69,31 +69,31 @@ class StateClock
   public:
     void Add(double delta)
       {
-      assert(value >= 0);
-      assert(value <= double(max_value));
+      assert(this->value >= 0);
+      assert(this->value <= double(max_value));
 
-      value += LimitDelta(delta);
-      if (value > double(max_value))
-        value = double(max_value);
+      this->value += LimitDelta(delta);
+      if (this->value > double(max_value))
+        this->value = double(max_value);
       }
 
     void Subtract(double delta)
       {
-      assert(value >= 0);
-      assert(value <= double(max_value));
+      assert(this->value >= 0);
+      assert(this->value <= double(max_value));
 
-      value -= LimitDelta(delta);
-      if (value < 0)
-        value = 0;
+      this->value -= LimitDelta(delta);
+      if (this->value < 0)
+        this->value = 0;
       }
 
     bool operator>=(double other) const
       {
       assert(other > 0);
-      assert(value >= 0);
-      assert(value <= double(max_value));
+      assert(this->value >= 0);
+      assert(this->value <= double(max_value));
 
-      return value >= other;
+      return this->value >= other;
       }
   };
 
