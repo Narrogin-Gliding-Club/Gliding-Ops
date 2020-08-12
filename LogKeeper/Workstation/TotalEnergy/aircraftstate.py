@@ -21,7 +21,7 @@ def main():
         airborne = True
         print('Takeoff at {}'.format(time))
     elif airborne == True:
-      if energy < 100:
+      if energy < 500:
         airborne = False
         print('Landing at {}'.format(time))
 
