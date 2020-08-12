@@ -7,7 +7,7 @@ import getopt
 import datetime, time
 import math
 
-def main():
+def main(zero):
   records = []
   for sin in sys.stdin:
     try:
@@ -39,12 +39,12 @@ def main():
   for record in records:
     if record[1] == 'position':
       v = record[10] * 1000 / 3600  # Now in meters / second
-      y = v * v * 0.5 + (record[11] - 310.0) * 9.8
+      y = v * v * 0.5 + (record[11] - zero) * 9.8
       print('{} {}'.format(record[6].hour * 3600 +
                            record[6].minute * 60 +
                            record[6].second,
                            y))
 
 if __name__ == "__main__":
-  main()
+  main(zero = float(sys.argv[1])) # No arg will give zero = 0.0
 
