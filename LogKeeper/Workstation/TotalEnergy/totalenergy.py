@@ -40,10 +40,12 @@ def main(zero):
     if record[1] == 'position':
       v = record[10] * 1000 / 3600  # Now in meters / second
       y = v * v * 0.5 + (record[11] - zero) * 9.8
-      print('{} {}'.format(record[6].hour * 3600 +
+      print('{} {} {} {}'.format(record[6].hour * 3600 +
                            record[6].minute * 60 +
                            record[6].second,
-                           y))
+                           y,
+                           record[11] - zero,
+                           v))
 
 if __name__ == "__main__":
   main(zero = float(sys.argv[1])) # No arg will give zero = 0.0
