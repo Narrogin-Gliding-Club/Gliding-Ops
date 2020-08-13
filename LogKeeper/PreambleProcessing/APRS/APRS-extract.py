@@ -17,6 +17,7 @@ def main(hex):
       if beacon['aprs_type'] == 'position':
         if beacon['name'] == hex:
           print(sin, end = "")
+          sys.stdout.flush()
 
     except StopIteration:
       sin = ""

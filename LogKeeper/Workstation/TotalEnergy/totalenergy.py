@@ -34,9 +34,7 @@ def main(zero):
       record.append(beacon['comment'])
     except StopIteration as e:
       print('StopIteration, {}'.format(e.message), file = sys.stderr)
-    records.append(record)
   
-  for record in records:
     if record[1] == 'position':
       v = record[10] * 1000 / 3600  # Now in meters / second
       y = v * v * 0.5 + (record[11] - zero) * 9.8
@@ -46,6 +44,7 @@ def main(zero):
                            y,
                            record[11] - zero,
                            v))
+      sys.stdout.flush()
 
 if __name__ == "__main__":
   main(zero = float(sys.argv[1])) # No arg will give zero = 0.0
