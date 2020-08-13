@@ -17,13 +17,14 @@ def main():
     time = int(parsed[0])
     energy = float(parsed[1])
     if airborne == False:
-      if energy > 1000:
+      if energy > 600:
         airborne = True
         print('Takeoff at {}'.format(time))
     elif airborne == True:
-      if energy < 500:
+      if energy < 400:
         airborne = False
         print('Landing at {}'.format(time))
+        sys.stdout.flush()
 
 if __name__ == "__main__":
   main()
