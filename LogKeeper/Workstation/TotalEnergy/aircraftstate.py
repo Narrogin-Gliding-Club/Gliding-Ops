@@ -11,10 +11,15 @@ def main():
   airborne     = False
   takoff_time  = 0
   landing_time = 0
+  last_time    = 0
 
   for sin in sys.stdin:
     parsed = sin.split(' ')
     time = int(parsed[0])
+    if time < last_time:
+      continue  # OGN sometimes spits out out of sequence data
+    else:
+      last_time = time
     energy = float(parsed[1])
     if airborne == False:
       if energy > 600:
