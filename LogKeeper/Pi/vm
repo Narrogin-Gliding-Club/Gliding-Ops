@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $# -lt 1 ]
+then
+  exit 255
+fi
+
 #/usr/bin/qemu-system-arm \
 #    -monitor stdio \
 #    -M raspi2 \
@@ -14,5 +19,6 @@
 #    -rtc base=localtime \
 #    -name "ADSL"
 
-qemu-system-arm    -kernel kernel-qemu-4.14.79-stretch    -dtb versatile-pb.dtb    -m 256 -M versatilepb -cpu arm1176    -serial stdio    -append "rw console=ttyAMA0 root=/dev/sda2 rootfstype=ext4  loglevel=8 rootwait fsck.repair=yes memtest=1"    -drive file=./2019-04-08-raspbian-stretch-lite-roroot.img,format=raw -no-reboot
+qemu-system-arm    -kernel ~/Work/qemu-rpi-kernel/kernel-qemu-4.19.50-buster -dtb ~/Work/qemu-rpi-kernel/versatile-pb-buster.dtb -m 256 -M versatilepb -cpu arm1176 -serial stdio -append "rw console=ttyAMA0 root=/dev/sda2 panic=1 rootfstype=ext4  loglevel=8 rootwait fsck.repair=yes memtest=1" -drive file=${1},format=raw -no-reboot
+
 

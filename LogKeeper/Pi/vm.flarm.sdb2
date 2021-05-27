@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./vm flarm.sdb2.img
+

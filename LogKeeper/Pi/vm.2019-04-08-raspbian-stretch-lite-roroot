@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./vm 2019-04-08-raspbian-stretch-lite-roroot.img
+
