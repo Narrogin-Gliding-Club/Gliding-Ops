@@ -23,3 +23,4 @@ fi
 
 gzip -dc ${1}/pi_backup.gz | tar -xvp -C ${2} -f - 
 
+touch /boot/ssh
