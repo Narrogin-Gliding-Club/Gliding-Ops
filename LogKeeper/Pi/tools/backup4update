@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Updating Raspberry Pi across major releases is problematic. Sometimes it
+# works and sometimes it does not. The only reliable way to do this is to
+# download the binary image of the new release and transfer the stuff we need
+# from the old binary image to the new binary image. This script will backup
+# the stuff we need to save from the old image, mounted somewhere, and saves
+# it to a destination.
+#
+# Almost certainly should be run as root because of the ownership of the
+# source files.
+
+# Invocation:
+#  sudo backup4update <where old image is mounted> <destination>
+#
+
+if [ $# -lt 2 ]
+then
+  echo "Usage:"
+  echo "$0 <source volume> <destination>"
+  exit 255
+fi
+
+SRC_LIST="etc/openvpn etc/hostname etc/wpa_supplicant/wpa_supplicant.conf home/pi sbin/init-overlay"
+
+tar -cvp -C ${1} -f - ${SRC_LIST} | gzip -cv > ${2}/pi_backup.gz
