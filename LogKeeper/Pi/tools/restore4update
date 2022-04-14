@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Updating Raspberry Pi across major releases is problematic. Sometimes it
+# works and sometimes it does not. The only reliable way to do this is to
+# download the binary image of the new release and transfer the stuff we need
+# from the old binary image to the new binary image. This script will read
+# a previously saved backup and write it to the new image.
+#
+# Almost certainly should be run as root because of the ownership of the
+# source and destination files.
+
+# Invocation:
+#  sudo restore4update <saved backup> <linux mounted image>
+#
+
+if [ $# -lt 2 ]
+then
+  echo "Usage:"
+  echo "$0 <saved backup> <linux mounted image>"
+  exit 255
+fi
+
+
+gzip -dc ${1}/pi_backup.gz | tar -xvp -C ${2} -f - 
+
