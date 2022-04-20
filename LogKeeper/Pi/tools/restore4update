@@ -21,6 +21,6 @@ then
 fi
 
 
-gzip -dc ${1}/pi_backup.gz | tar -xvp -C ${2} -f - 
+gzip -dc ${1}/pi_backup.gz | tar -xvp -C ${2}/rootfs -f - 
 
 touch ${2}/boot/ssh
