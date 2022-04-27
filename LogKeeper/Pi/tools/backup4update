@@ -21,6 +21,6 @@ then
   exit 255
 fi
 
-SRC_LIST="etc/openvpn etc/hostname etc/wpa_supplicant/wpa_supplicant.conf home/pi sbin/init-overlay"
+SRC_LIST="etc/openvpn etc/hostname etc/wpa_supplicant/wpa_supplicant.conf home/pi"
 
 tar -cvp -C ${1} -f - ${SRC_LIST} | gzip -cv > ${2}/pi_backup.gz
